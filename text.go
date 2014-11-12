@@ -9,6 +9,7 @@ type OnClick func(xPos, yPos float64) (err error)
 type OnHover func(xPos, yPos float64) (err error)
 type Text struct {
 	*gltext.Font
+	*gltext.Text
 	OnClick OnClick
 	OnHover OnHover
 	IsHover bool
@@ -25,7 +26,15 @@ func (text *Text) Load(scale, low, high int32) (err error) {
 	if err != nil {
 		return
 	}
+	text.Text, err = gltext.LoadText(text.Font)
+	if err != nil {
+		return
+	}
 	return nil
+}
+
+func (text *Text) SetString(str string) (gltext.Point, gltext.Point) {
+	return text.Text.SetString(text.Font, str)
 }
 
 func (text *Text) IsClicked(xPos, yPos float64) {

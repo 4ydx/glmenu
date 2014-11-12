@@ -43,7 +43,8 @@ type Menu struct {
 	LowerLeft    Point
 
 	// objects
-	Text []Text
+	Text          []Text
+	TextScaleRate float32 // increment during a scale operation
 	//Fields []Field
 
 	// opengl oriented
@@ -79,6 +80,9 @@ func (menu *Menu) Load(lowerLeft Point) error {
 	menu.Visible = false
 	menu.ShowOn = glfw.KeyM
 	menu.LowerLeft = lowerLeft
+
+	// TODO: make this time dependent rather than fps dependent
+	menu.TextScaleRate = 0.01
 
 	// create shader program and define attributes and uniforms
 	menu.program, err = gltext.NewProgram(vertexShaderSource, fragmentShaderSource)
@@ -191,9 +195,10 @@ func (menu *Menu) Draw() bool {
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
 	gl.BindVertexArray(0)
-	for _, text := range menu.Text {
+	for i, text := range menu.Text {
 		if !text.IsHover {
-			text.SetScale(1)
+			text.AddScale(-menu.TextScaleRate)
+			menu.Text[i] = text
 		}
 		text.Draw()
 	}
