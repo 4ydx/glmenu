@@ -228,8 +228,10 @@ func (menu *Menu) ScreenClick(xPos, yPos float64) {
 	}
 	yPos = float64(menu.windowHeight) - yPos
 	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
-		for _, label := range menu.Labels {
-			label.IsClicked(xPos, yPos)
+		for i, label := range menu.Labels {
+			if label.IsClicked != nil {
+				menu.Labels[i].IsClicked(xPos, yPos)
+			}
 		}
 	}
 }
@@ -241,8 +243,9 @@ func (menu *Menu) ScreenHover(xPos, yPos float64) {
 	yPos = float64(menu.windowHeight) - yPos
 	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
 		for i, label := range menu.Labels {
-			label.IsHovered(xPos, yPos)
-			menu.Labels[i] = label
+			if label.IsHovered != nil {
+				menu.Labels[i].IsHovered(xPos, yPos)
+			}
 		}
 	}
 }
