@@ -5,6 +5,7 @@ import (
 	glfw "github.com/go-gl/glfw3"
 	"github.com/go-gl/glow/gl-core/3.3/gl"
 	"github.com/go-gl/mathgl/mgl32"
+	"os"
 )
 
 type Point struct {
@@ -42,10 +43,10 @@ type Menu struct {
 	IsAutoCenter bool
 	LowerLeft    Point
 
-	// objects
-	Text          []Text
+	// interactive objects
+	Font          *gltext.Font
+	Labels        []Label
 	TextScaleRate float32 // increment during a scale operation
-	//Fields []Field
 
 	// opengl oriented
 	windowWidth   float32
@@ -72,8 +73,7 @@ func (menu *Menu) SetDimension(w, h float32) {
 	menu.Height = h
 }
 
-func (menu *Menu) Load(lowerLeft Point) error {
-	var err error
+func (menu *Menu) Load(scale int32, lowerLeft Point) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
@@ -81,13 +81,25 @@ func (menu *Menu) Load(lowerLeft Point) error {
 	menu.ShowOn = glfw.KeyM
 	menu.LowerLeft = lowerLeft
 
-	// TODO: make this time dependent rather than fps dependent
+	// load font
+	fd, err := os.Open("font/luximr.ttf")
+	if err != nil {
+		return
+	}
+	defer fd.Close()
+
+	menu.Font, err = gltext.LoadTruetype(fd, scale, 32, 127)
+	if err != nil {
+		return
+	}
+
+	// 2DO: make this time dependent rather than fps dependent
 	menu.TextScaleRate = 0.01
 
 	// create shader program and define attributes and uniforms
 	menu.program, err = gltext.NewProgram(vertexShaderSource, fragmentShaderSource)
 	if err != nil {
-		panic(err)
+		return
 	}
 	menu.glMatrix = gl.GetUniformLocation(menu.program, gl.Str("matrix\x00"))
 	menu.position = uint32(gl.GetAttribLocation(menu.program, gl.Str("position\x00")))
@@ -147,9 +159,7 @@ func (menu *Menu) Load(lowerLeft Point) error {
 func (menu *Menu) ResizeWindow(width float32, height float32) {
 	menu.windowWidth = width
 	menu.windowHeight = height
-	for _, text := range menu.Text {
-		text.ResizeWindow(width, height)
-	}
+	menu.Font.ResizeWindow(width, height)
 	menu.ortho = mgl32.Ortho2D(0, menu.windowWidth, 0, menu.windowHeight)
 }
 
@@ -195,12 +205,12 @@ func (menu *Menu) Draw() bool {
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
 	gl.BindVertexArray(0)
-	for i, text := range menu.Text {
-		if !text.IsHover {
-			text.AddScale(-menu.TextScaleRate)
-			menu.Text[i] = text
+	for i, label := range menu.Labels {
+		if !label.IsHover {
+			label.Text.AddScale(-menu.TextScaleRate)
+			menu.Labels[i] = label
 		}
-		text.Draw()
+		label.Text.Draw()
 	}
 	return menu.Visible
 }
@@ -211,8 +221,8 @@ func (menu *Menu) ScreenClick(xPos, yPos float64) {
 	}
 	yPos = float64(menu.windowHeight) - yPos
 	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
-		for _, text := range menu.Text {
-			text.IsClicked(xPos, yPos)
+		for _, label := range menu.Labels {
+			label.IsClicked(xPos, yPos)
 		}
 	}
 }
@@ -223,9 +233,9 @@ func (menu *Menu) ScreenHover(xPos, yPos float64) {
 	}
 	yPos = float64(menu.windowHeight) - yPos
 	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
-		for i, text := range menu.Text {
-			text.IsHovered(xPos, yPos)
-			menu.Text[i] = text
+		for i, label := range menu.Labels {
+			label.IsHovered(xPos, yPos)
+			menu.Labels[i] = label
 		}
 	}
 }
