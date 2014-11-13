@@ -64,22 +64,29 @@ type Menu struct {
 	eboIndexCount int
 }
 
+func (menu *Menu) AddLabel(str string, x, y float32) (label Label) {
+	label.Text = gltext.LoadText(menu.Font)
+	_, _ = label.Text.SetString(str)
+	label.Text.SetScale(1)
+	label.Text.SetPosition(0, 0)
+	label.Text.SetColor(0, 0, 0, 1)
+	menu.Labels = append(menu.Labels, label)
+	return
+}
+
 func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-func (menu *Menu) SetDimension(w, h float32) {
-	menu.Width = w
-	menu.Height = h
-}
-
-func (menu *Menu) Load(scale int32, lowerLeft Point) (err error) {
+func (menu *Menu) Load(lowerLeft Point, width float32, height float32, scale int32) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
 	menu.Visible = false
 	menu.ShowOn = glfw.KeyM
 	menu.LowerLeft = lowerLeft
+	menu.Width = width
+	menu.Height = height
 
 	// load font
 	fd, err := os.Open("font/luximr.ttf")
