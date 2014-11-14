@@ -41,16 +41,16 @@ type Menu struct {
 	Height       float32
 	Width        float32
 	IsAutoCenter bool
-	LowerLeft    Point
+	lowerLeft    Point
 
 	// interactive objects
 	Font          *gltext.Font
-	Labels        []Label
+	Labels        []*Label
 	TextScaleRate float32 // increment during a scale operation
 
 	// opengl oriented
-	windowWidth   float32
-	windowHeight  float32
+	WindowWidth   float32
+	WindowHeight  float32
 	program       uint32 // shader program
 	glMatrix      int32  // ortho matrix
 	position      uint32 // index location
@@ -64,27 +64,25 @@ type Menu struct {
 	eboIndexCount int
 }
 
-func (menu *Menu) AddLabel(str string, x, y float32) (label Label) {
-	label.Text = gltext.LoadText(menu.Font)
-	_, _ = label.Text.SetString(str)
+func (menu *Menu) AddLabel(label *Label, str string) {
+	label.Load(menu, menu.Font)
+	label.Text.SetString(str)
 	label.Text.SetScale(1)
 	label.Text.SetPosition(0, 0)
 	label.Text.SetColor(0, 0, 0, 1)
 	menu.Labels = append(menu.Labels, label)
-	return
 }
 
 func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-func (menu *Menu) Load(lowerLeft Point, width float32, height float32, scale int32) (err error) {
+func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
 	menu.Visible = false
 	menu.ShowOn = glfw.KeyM
-	menu.LowerLeft = lowerLeft
 	menu.Width = width
 	menu.Height = height
 
@@ -145,6 +143,7 @@ func (menu *Menu) Load(lowerLeft Point, width float32, height float32, scale int
 	menu.eboIndexCount = 6     // 6 triangle indices for a quad
 	menu.vboData = make([]float32, menu.vboIndexCount, menu.vboIndexCount)
 	menu.eboData = make([]int32, menu.eboIndexCount, menu.eboIndexCount)
+	menu.lowerLeft = menu.findCenter()
 	menu.makeBufferData()
 
 	// setup context
@@ -164,28 +163,28 @@ func (menu *Menu) Load(lowerLeft Point, width float32, height float32, scale int
 }
 
 func (menu *Menu) ResizeWindow(width float32, height float32) {
-	menu.windowWidth = width
-	menu.windowHeight = height
+	menu.WindowWidth = width
+	menu.WindowHeight = height
 	menu.Font.ResizeWindow(width, height)
-	menu.ortho = mgl32.Ortho2D(0, menu.windowWidth, 0, menu.windowHeight)
+	menu.ortho = mgl32.Ortho2D(-menu.WindowWidth/2, menu.WindowWidth/2, -menu.WindowHeight/2, menu.WindowHeight/2)
 }
 
 func (menu *Menu) makeBufferData() {
 	// index (0,0)
-	menu.vboData[0] = menu.LowerLeft.X // position
-	menu.vboData[1] = menu.LowerLeft.Y
+	menu.vboData[0] = menu.lowerLeft.X // position
+	menu.vboData[1] = menu.lowerLeft.Y
 
 	// index (1,0)
-	menu.vboData[2] = menu.LowerLeft.X + menu.Width
-	menu.vboData[3] = menu.LowerLeft.Y
+	menu.vboData[2] = menu.lowerLeft.X + menu.Width
+	menu.vboData[3] = menu.lowerLeft.Y
 
 	// index (1,1)
-	menu.vboData[4] = menu.LowerLeft.X + menu.Width
-	menu.vboData[5] = menu.LowerLeft.Y + menu.Height
+	menu.vboData[4] = menu.lowerLeft.X + menu.Width
+	menu.vboData[5] = menu.lowerLeft.Y + menu.Height
 
 	// index (0,1)
-	menu.vboData[6] = menu.LowerLeft.X
-	menu.vboData[7] = menu.LowerLeft.Y + menu.Height
+	menu.vboData[6] = menu.lowerLeft.X
+	menu.vboData[7] = menu.lowerLeft.Y + menu.Height
 
 	menu.eboData[0] = 0
 	menu.eboData[1] = 1
@@ -222,12 +221,19 @@ func (menu *Menu) Draw() bool {
 	return menu.Visible
 }
 
+func (menu *Menu) OrthoToScreenCoord() (x, y float32) {
+	x = menu.lowerLeft.X + menu.WindowWidth/2
+	y = menu.lowerLeft.Y + menu.WindowHeight/2
+	return
+}
+
 func (menu *Menu) ScreenClick(xPos, yPos float64) {
 	if !menu.Visible {
 		return
 	}
-	yPos = float64(menu.windowHeight) - yPos
-	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
+	yPos = float64(menu.WindowHeight) - yPos
+	x, y := menu.OrthoToScreenCoord()
+	if float32(xPos) > x && float32(xPos) < x+menu.Width && float32(yPos) > y && float32(yPos) < y+menu.Height {
 		for i, label := range menu.Labels {
 			if label.IsClicked != nil {
 				menu.Labels[i].IsClicked(xPos, yPos)
@@ -240,8 +246,9 @@ func (menu *Menu) ScreenHover(xPos, yPos float64) {
 	if !menu.Visible {
 		return
 	}
-	yPos = float64(menu.windowHeight) - yPos
-	if xPos > float64(menu.LowerLeft.X) && xPos < float64(menu.LowerLeft.X+menu.Width) && yPos > float64(menu.LowerLeft.Y) && yPos < float64(menu.LowerLeft.Y+menu.Height) {
+	yPos = float64(menu.WindowHeight) - yPos
+	x, y := menu.OrthoToScreenCoord()
+	if float32(xPos) > x && float32(xPos) < x+menu.Width && float32(yPos) > y && float32(yPos) < y+menu.Height {
 		for i, label := range menu.Labels {
 			if label.IsHovered != nil {
 				menu.Labels[i].IsHovered(xPos, yPos)
@@ -250,14 +257,11 @@ func (menu *Menu) ScreenHover(xPos, yPos float64) {
 	}
 }
 
-func (menu *Menu) FindCenter() (lowerLeft Point) {
-	windowWidthHalf := menu.windowWidth / 2
-	windowHeightHalf := menu.windowHeight / 2
-
+func (menu *Menu) findCenter() (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = float32(windowWidthHalf) - menuWidthHalf
-	lowerLeft.Y = float32(windowHeightHalf) - menuHeightHalf
+	lowerLeft.X = -menuWidthHalf
+	lowerLeft.Y = -menuHeightHalf
 	return
 }
