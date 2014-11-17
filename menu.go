@@ -213,8 +213,7 @@ func (menu *Menu) Draw() bool {
 	gl.BindVertexArray(0)
 	for i, label := range menu.Labels {
 		if !label.IsHover {
-			label.Text.AddScale(-menu.TextScaleRate)
-			menu.Labels[i] = label
+			menu.Labels[i].OnNotHover()
 		}
 		label.Text.Draw()
 	}

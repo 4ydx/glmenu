@@ -4,14 +4,14 @@ import (
 	gltext "github.com/4ydx/gltext"
 )
 
-type OnClick func(xPos, yPos float64) (err error)
-type OnHover func(xPos, yPos float64) (err error)
+type Interaction func(xPos, yPos float64) (err error)
 type Label struct {
-	Menu    *Menu
-	Text    *gltext.Text
-	OnClick OnClick
-	OnHover OnHover
-	IsHover bool
+	Menu       *Menu
+	Text       *gltext.Text
+	OnClick    Interaction
+	OnHover    Interaction
+	OnNotHover func() (err error)
+	IsHover    bool
 }
 
 func (label *Label) Load(menu *Menu, font *gltext.Font) {
