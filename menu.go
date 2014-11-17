@@ -201,6 +201,12 @@ func (menu *Menu) Release() {
 	gl.DeleteBuffers(1, &menu.vbo)
 	gl.DeleteBuffers(1, &menu.ebo)
 	gl.DeleteBuffers(1, &menu.vao)
+	for i := range menu.Labels {
+		menu.Labels[i].Text.Release()
+		if menu.Labels[i].Shadow.Text != nil {
+			menu.Labels[i].Shadow.Text.Release()
+		}
+	}
 }
 
 func (menu *Menu) Draw() bool {
@@ -214,11 +220,14 @@ func (menu *Menu) Draw() bool {
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
 	gl.BindVertexArray(0)
-	for i, label := range menu.Labels {
-		if !label.IsHover {
-			menu.Labels[i].OnNotHover()
+	for i := range menu.Labels {
+		if !menu.Labels[i].IsHover {
+			menu.Labels[i].OnNotHover(menu.Labels[i])
+			if menu.Labels[i].Shadow != nil {
+				menu.Labels[i].OnNotHover(&menu.Labels[i].Shadow.Label)
+			}
 		}
-		label.Text.Draw()
+		menu.Labels[i].Draw()
 	}
 	return menu.Visible
 }
