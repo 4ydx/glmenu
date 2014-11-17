@@ -75,6 +75,9 @@ func (menu *Menu) AddLabel(label *Label, str string) {
 
 func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
+	for i := range menu.Labels {
+		menu.Labels[i].Reset()
+	}
 }
 
 func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {

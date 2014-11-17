@@ -14,6 +14,10 @@ type Label struct {
 	IsHover    bool
 }
 
+func (label *Label) Reset() {
+	label.Text.SetScale(label.Text.ScaleMin)
+}
+
 func (label *Label) Load(menu *Menu, font *gltext.Font) {
 	label.Menu = menu
 	label.Text = gltext.LoadText(font)
