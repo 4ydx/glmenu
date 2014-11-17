@@ -71,9 +71,6 @@ func (label *Label) IsClicked(xPos, yPos float64) {
 	X1, X2 := label.OrthoToScreenCoord()
 	if float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y {
 		label.OnClick(label, xPos, yPos)
-		if label.Shadow != nil {
-			label.OnClick(&label.Shadow.Label, xPos, yPos)
-		}
 	}
 }
 
