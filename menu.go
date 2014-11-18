@@ -222,9 +222,11 @@ func (menu *Menu) Draw() bool {
 	gl.BindVertexArray(0)
 	for i := range menu.Labels {
 		if !menu.Labels[i].IsHover {
-			menu.Labels[i].OnNotHover(menu.Labels[i])
-			if menu.Labels[i].Shadow != nil {
-				menu.Labels[i].OnNotHover(&menu.Labels[i].Shadow.Label)
+			if menu.Labels[i].OnNotHover != nil {
+				menu.Labels[i].OnNotHover(menu.Labels[i])
+				if menu.Labels[i].Shadow != nil {
+					menu.Labels[i].OnNotHover(&menu.Labels[i].Shadow.Label)
+				}
 			}
 		}
 		menu.Labels[i].Draw()
@@ -243,8 +245,8 @@ func (menu *Menu) ScreenClick(xPos, yPos float64) {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
-	for i, label := range menu.Labels {
-		if label.IsClicked != nil {
+	for i := range menu.Labels {
+		if menu.Labels[i].IsClicked != nil {
 			menu.Labels[i].IsClicked(xPos, yPos)
 		}
 	}
@@ -255,8 +257,8 @@ func (menu *Menu) ScreenHover(xPos, yPos float64) {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
-	for i, label := range menu.Labels {
-		if label.IsHovered != nil {
+	for i := range menu.Labels {
+		if menu.Labels[i].IsHovered != nil {
 			menu.Labels[i].IsHovered(xPos, yPos)
 		}
 	}
