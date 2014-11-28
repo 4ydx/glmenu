@@ -27,10 +27,11 @@ void main() {
 var fragmentShaderSource string = `
 #version 330
 
+uniform vec4 background;
 out vec4 fragment_color;
 
 void main() {
-  fragment_color = vec4(1,1,1,1);
+  fragment_color = background;
 }
 ` + "\x00"
 
@@ -42,6 +43,9 @@ type Menu struct {
 	Width        float32
 	IsAutoCenter bool
 	lowerLeft    Point
+
+	backgroundUniform int32
+	Background        mgl32.Vec4
 
 	// interactive objects
 	Font          *gltext.Font
@@ -110,6 +114,7 @@ func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
 		return
 	}
 	menu.glMatrix = gl.GetUniformLocation(menu.program, gl.Str("matrix\x00"))
+	menu.backgroundUniform = gl.GetUniformLocation(menu.program, gl.Str("background\x00"))
 	menu.position = uint32(gl.GetAttribLocation(menu.program, gl.Str("position\x00")))
 
 	gl.GenVertexArrays(1, &menu.vao)
@@ -216,6 +221,7 @@ func (menu *Menu) Draw() bool {
 	gl.UseProgram(menu.program)
 
 	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.ortho[0])
+	gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Background[0])
 
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
