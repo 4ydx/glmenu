@@ -28,7 +28,7 @@ func (label *Label) AddShadow(offset, r, g, b float32) {
 
 func (label *Label) UpdateShadow(offset, r, g, b float32) {
 	label.Shadow.Text = gltext.LoadText(label.Menu.Font)
-	label.Shadow.Text.SetColor(r, g, b, 1)
+	label.Shadow.Text.SetColor(r, g, b)
 	label.Shadow.Text.SetString(label.Text.String)
 	label.Shadow.Text.SetPosition(label.Text.SetPositionX+offset, label.Text.SetPositionY+offset)
 

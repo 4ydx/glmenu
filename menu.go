@@ -73,7 +73,7 @@ func (menu *Menu) AddLabel(label *Label, str string) {
 	label.Text.SetString(str)
 	label.Text.SetScale(1)
 	label.Text.SetPosition(0, 0)
-	label.Text.SetColor(0, 0, 0, 1)
+	label.Text.SetColor(0, 0, 0)
 	menu.Labels = append(menu.Labels, label)
 }
 
