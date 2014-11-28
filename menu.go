@@ -208,7 +208,7 @@ func (menu *Menu) Release() {
 	gl.DeleteBuffers(1, &menu.vao)
 	for i := range menu.Labels {
 		menu.Labels[i].Text.Release()
-		if menu.Labels[i].Shadow.Text != nil {
+		if menu.Labels[i].Shadow != nil && menu.Labels[i].Shadow.Text != nil {
 			menu.Labels[i].Shadow.Text.Release()
 		}
 	}
