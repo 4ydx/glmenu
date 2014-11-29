@@ -35,6 +35,15 @@ void main() {
 }
 ` + "\x00"
 
+type MouseClick int
+
+const (
+	MouseUnclicked MouseClick = iota
+	MouseLeft
+	MouseRight
+	MouseCenter
+)
+
 type Menu struct {
 	// options
 	Visible      bool
@@ -240,31 +249,43 @@ func (menu *Menu) Draw() bool {
 	return menu.Visible
 }
 
-func (menu *Menu) OrthoToScreenCoord() (x, y float32) {
+func (menu *Menu) OrthoToMouseCoord() (x, y float32) {
 	x = menu.lowerLeft.X + menu.WindowWidth/2
 	y = menu.lowerLeft.Y + menu.WindowHeight/2
 	return
 }
 
-func (menu *Menu) ScreenClick(xPos, yPos float64) {
+func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	if !menu.Visible {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
 	for i := range menu.Labels {
-		if menu.Labels[i].IsClicked != nil {
-			menu.Labels[i].IsClicked(xPos, yPos)
+		if menu.Labels[i].OnClick != nil {
+			menu.Labels[i].IsClicked(xPos, yPos, button)
 		}
 	}
 }
 
-func (menu *Menu) ScreenHover(xPos, yPos float64) {
+func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	if !menu.Visible {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
 	for i := range menu.Labels {
-		if menu.Labels[i].IsHovered != nil {
+		if menu.Labels[i].OnRelease != nil {
+			menu.Labels[i].IsReleased(xPos, yPos, button)
+		}
+	}
+}
+
+func (menu *Menu) MouseHover(xPos, yPos float64) {
+	if !menu.Visible {
+		return
+	}
+	yPos = float64(menu.WindowHeight) - yPos
+	for i := range menu.Labels {
+		if menu.Labels[i].OnHover != nil {
 			menu.Labels[i].IsHovered(xPos, yPos)
 		}
 	}

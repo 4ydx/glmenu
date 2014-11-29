@@ -4,13 +4,21 @@ import (
 	gltext "github.com/4ydx/gltext"
 )
 
-type Interaction func(label *Label, xPos, yPos float64) (err error)
+type Interaction func(
+	label *Label,
+	xPos, yPos float64,
+	button MouseClick,
+	isInBoundingBox bool,
+)
+
 type Label struct {
 	Menu       *Menu
 	Text       *gltext.Text
 	OnClick    Interaction
+	IsClick    bool
+	OnRelease  Interaction
 	OnHover    Interaction
-	OnNotHover func(label *Label) (err error)
+	OnNotHover func(label *Label)
 	IsHover    bool
 	Shadow     *Shadow
 }
@@ -65,25 +73,36 @@ func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
-func (label *Label) IsClicked(xPos, yPos float64) {
-	// menu rendering (and text) is positioned in orthographic projection coordinates but click positions are based on window coordinates
+func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
+	// menu rendering (and text) is positioned in orthographic projection coordinates
+	// but click positions are based on window coordinates
 	// we have to transform them
 	X1, X2 := label.OrthoToScreenCoord()
-	if float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y {
-		label.OnClick(label, xPos, yPos)
+	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	if inBox {
+		label.IsClick = true
+		label.OnClick(label, xPos, yPos, button, inBox)
+	}
+}
+
+func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
+	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
+	X1, X2 := label.OrthoToScreenCoord()
+	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	if label.IsClick {
+		label.OnRelease(label, xPos, yPos, button, inBox)
 	}
 }
 
 func (label *Label) IsHovered(xPos, yPos float64) {
 	X1, X2 := label.OrthoToScreenCoord()
-	if float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y {
-		label.IsHover = true
-		label.OnHover(label, xPos, yPos)
+	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	label.IsHover = inBox
+	if inBox {
+		label.OnHover(label, xPos, yPos, MouseUnclicked, inBox)
 		if label.Shadow != nil {
-			label.OnHover(&label.Shadow.Label, xPos, yPos)
+			label.OnHover(&label.Shadow.Label, xPos, yPos, MouseUnclicked, inBox)
 		}
-	} else {
-		label.IsHover = false
 	}
 }
 
