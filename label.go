@@ -57,10 +57,10 @@ func (label *Label) Load(menu *Menu, font *gltext.Font) {
 	label.Text = gltext.LoadText(font)
 }
 
-func (label *Label) SetString(str string) {
-	label.Text.SetString(str)
+func (label *Label) SetString(str string, argv ...interface{}) {
+	label.Text.SetString(str, argv)
 	if label.Shadow != nil {
-		label.Shadow.Text.SetString(str)
+		label.Shadow.Text.SetString(str, argv)
 	}
 }
 
