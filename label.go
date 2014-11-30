@@ -58,9 +58,17 @@ func (label *Label) Load(menu *Menu, font *gltext.Font) {
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {
-	label.Text.SetString(str, argv)
+	if len(argv) == 0 {
+		label.Text.SetString(str)
+	} else {
+		label.Text.SetString(str, argv)
+	}
 	if label.Shadow != nil {
-		label.Shadow.Text.SetString(str, argv)
+		if len(argv) == 0 {
+			label.Shadow.Text.SetString(str)
+		} else {
+			label.Shadow.Text.SetString(str, argv)
+		}
 	}
 }
 
