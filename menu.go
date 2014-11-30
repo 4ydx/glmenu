@@ -45,6 +45,9 @@ const (
 )
 
 type Menu struct {
+	//trigger
+	OnShow func()
+
 	// options
 	Visible      bool
 	ShowOn       glfw.Key
@@ -89,6 +92,9 @@ func (menu *Menu) AddLabel(label *Label, str string) {
 func (menu *Menu) Show() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
+	}
+	if menu.OnShow != nil {
+		menu.OnShow()
 	}
 	menu.Visible = true
 }
