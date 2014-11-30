@@ -147,6 +147,10 @@ func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
 	// vao
 	gl.BindVertexArray(menu.vao)
 
+	// 2DO: Change text depth to get it to render? For now this works.
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+
 	// vbo
 	// specify the buffer for which the VertexAttribPointer calls apply
 	gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
