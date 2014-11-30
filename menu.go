@@ -93,10 +93,10 @@ func (menu *Menu) Show() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
 	}
+	menu.Visible = true
 	if menu.OnShow != nil {
 		menu.OnShow()
 	}
-	menu.Visible = true
 }
 
 func (menu *Menu) Hide() {
