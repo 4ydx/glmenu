@@ -62,6 +62,7 @@ type Menu struct {
 	// interactive objects
 	Font          *gltext.Font
 	Labels        []*Label
+	TextBoxes     []*TextBox
 	TextScaleRate float32 // increment during a scale operation
 
 	// opengl oriented
@@ -82,11 +83,20 @@ type Menu struct {
 
 func (menu *Menu) AddLabel(label *Label, str string) {
 	label.Load(menu, menu.Font)
-	label.Text.SetString(str)
+	label.SetString(str)
 	label.Text.SetScale(1)
 	label.Text.SetPosition(0, 0)
 	label.Text.SetColor(0, 0, 0)
 	menu.Labels = append(menu.Labels, label)
+}
+
+func (menu *Menu) AddTextBox(textbox *TextBox, str string) {
+	textbox.Load(menu, menu.Font)
+	textbox.SetString(str)
+	textbox.Text.SetScale(1)
+	textbox.Text.SetPosition(0, 0)
+	textbox.Text.SetColor(0, 0, 0)
+	menu.TextBoxes = append(menu.TextBoxes, textbox)
 }
 
 func (menu *Menu) Show() {
@@ -245,6 +255,9 @@ func (menu *Menu) Release() {
 			menu.Labels[i].Shadow.Text.Release()
 		}
 	}
+	for i := range menu.TextBoxes {
+		menu.TextBoxes[i].Text.Release()
+	}
 }
 
 func (menu *Menu) Draw() bool {
@@ -270,6 +283,9 @@ func (menu *Menu) Draw() bool {
 		}
 		menu.Labels[i].Draw()
 	}
+	for i := range menu.TextBoxes {
+		menu.TextBoxes[i].Draw()
+	}
 	return menu.Visible
 }
 
@@ -285,9 +301,10 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	}
 	yPos = float64(menu.WindowHeight) - yPos
 	for i := range menu.Labels {
-		if menu.Labels[i].OnClick != nil {
-			menu.Labels[i].IsClicked(xPos, yPos, button)
-		}
+		menu.Labels[i].IsClicked(xPos, yPos, button)
+	}
+	for i := range menu.TextBoxes {
+		menu.TextBoxes[i].IsClicked(xPos, yPos, button)
 	}
 }
 
@@ -297,9 +314,10 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	}
 	yPos = float64(menu.WindowHeight) - yPos
 	for i := range menu.Labels {
-		if menu.Labels[i].OnRelease != nil {
-			menu.Labels[i].IsReleased(xPos, yPos, button)
-		}
+		menu.Labels[i].IsReleased(xPos, yPos, button)
+	}
+	for i := range menu.TextBoxes {
+		menu.TextBoxes[i].IsReleased(xPos, yPos, button)
 	}
 }
 

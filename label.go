@@ -4,7 +4,7 @@ import (
 	gltext "github.com/4ydx/gltext"
 )
 
-type Interaction func(
+type LabelInteraction func(
 	label *Label,
 	xPos, yPos float64,
 	button MouseClick,
@@ -14,10 +14,10 @@ type Interaction func(
 type Label struct {
 	Menu       *Menu
 	Text       *gltext.Text
-	OnClick    Interaction
+	OnClick    LabelInteraction
 	IsClick    bool
-	OnRelease  Interaction
-	OnHover    Interaction
+	OnRelease  LabelInteraction
+	OnHover    LabelInteraction
 	OnNotHover func(label *Label)
 	IsHover    bool
 	Shadow     *Shadow
@@ -89,7 +89,9 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
 		label.IsClick = true
-		label.OnClick(label, xPos, yPos, button, inBox)
+		if label.OnClick != nil {
+			label.OnClick(label, xPos, yPos, button, inBox)
+		}
 	}
 }
 
@@ -98,8 +100,11 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	X1, X2 := label.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if label.IsClick {
-		label.OnRelease(label, xPos, yPos, button, inBox)
+		if label.OnRelease != nil {
+			label.OnRelease(label, xPos, yPos, button, inBox)
+		}
 	}
+	label.IsClick = false
 }
 
 func (label *Label) IsHovered(xPos, yPos float64) {
