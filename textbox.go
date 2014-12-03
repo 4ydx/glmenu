@@ -24,9 +24,9 @@ func (textbox *TextBox) Load(menu *Menu, font *gltext.Font) {
 
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {
 	if len(argv) == 0 {
-		textbox.Text.SetString(str)
+		textbox.Text.SetString(str + "|")
 	} else {
-		textbox.Text.SetString(str, argv)
+		textbox.Text.SetString(str+"|", argv)
 	}
 }
 
