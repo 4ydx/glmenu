@@ -58,6 +58,12 @@ func (textbox *TextBox) Draw() {
 	textbox.Text.Draw()
 }
 
+func (textbox *TextBox) DeleteCharacter() {
+	r := []rune(textbox.Text.String)
+	r = r[0 : len(r)-2]
+	textbox.Text.SetString(string(r) + "|")
+}
+
 func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	X1.X = textbox.Text.X1.X + textbox.Menu.WindowWidth/2
 	X1.Y = textbox.Text.X1.Y + textbox.Menu.WindowHeight/2
