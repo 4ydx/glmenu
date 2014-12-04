@@ -2,6 +2,7 @@ package menu
 
 import (
 	gltext "github.com/4ydx/gltext"
+	glfw "github.com/go-gl/glfw3"
 	"time"
 )
 
@@ -58,10 +59,22 @@ func (textbox *TextBox) Draw() {
 	textbox.Text.Draw()
 }
 
-func (textbox *TextBox) DeleteCharacter() {
-	r := []rune(textbox.Text.String)
-	r = r[0 : len(r)-2]
-	textbox.Text.SetString(string(r) + "|")
+func (textbox *TextBox) KeyPress(key glfw.Key) {
+	switch key {
+	case glfw.KeyBackspace:
+		textbox.Backspace()
+	}
+}
+
+func (textbox *TextBox) Backspace() {
+	if textbox.IsEdit {
+		r := []rune(textbox.Text.String)
+		r = r[0 : len(r)-2]
+		// this will recenter the textbox on the screen
+		textbox.Text.SetString(string(r) + "|")
+		// this will place it back where it was previously positioned
+		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+	}
 }
 
 func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {

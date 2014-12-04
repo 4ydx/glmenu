@@ -50,7 +50,7 @@ type Menu struct {
 
 	// options
 	Visible      bool
-	ShowOn       glfw.Key
+	ShowOnKey    glfw.Key
 	Height       float32
 	Width        float32
 	IsAutoCenter bool
@@ -128,7 +128,7 @@ func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
 	glint_size := 4
 
 	menu.Visible = false
-	menu.ShowOn = glfw.KeyM
+	menu.ShowOnKey = glfw.KeyM
 	menu.Width = width
 	menu.Height = height
 
@@ -340,4 +340,10 @@ func (menu *Menu) findCenter() (lowerLeft Point) {
 	lowerLeft.X = -menuWidthHalf
 	lowerLeft.Y = -menuHeightHalf
 	return
+}
+
+func (menu *Menu) KeyPress(key glfw.Key) {
+	for i := range menu.TextBoxes {
+		menu.TextBoxes[i].KeyPress(key)
+	}
 }
