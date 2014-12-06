@@ -59,21 +59,41 @@ func (textbox *TextBox) Draw() {
 	textbox.Text.Draw()
 }
 
-func (textbox *TextBox) KeyPress(key glfw.Key) {
+func (textbox *TextBox) KeyPress(key glfw.Key, withShift bool) {
 	switch key {
 	case glfw.KeyBackspace:
 		textbox.Backspace()
+	default:
+		textbox.AddCharacter(key, withShift)
+	}
+}
+
+func (textbox *TextBox) AddCharacter(key glfw.Key, withShift bool) {
+	if textbox.Text.HasRune(rune(key)) {
+		var theRune rune
+		if !withShift && key >= 65 && key <= 90 {
+			theRune = rune(key) + 32
+		} else {
+			theRune = rune(key)
+		}
+		r := []rune(textbox.Text.String)
+		r = r[0 : len(r)-1] // trim the bar
+		r = append(r, theRune)
+		textbox.Text.SetString(string(r) + "|")
+		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 	}
 }
 
 func (textbox *TextBox) Backspace() {
 	if textbox.IsEdit {
 		r := []rune(textbox.Text.String)
-		r = r[0 : len(r)-2]
-		// this will recenter the textbox on the screen
-		textbox.Text.SetString(string(r) + "|")
-		// this will place it back where it was previously positioned
-		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+		if len(r) > 1 {
+			r = r[0 : len(r)-2]
+			// this will recenter the textbox on the screen
+			textbox.Text.SetString(string(r) + "|")
+			// this will place it back where it was previously positioned
+			textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+		}
 	}
 }
 

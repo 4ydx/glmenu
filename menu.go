@@ -342,8 +342,8 @@ func (menu *Menu) findCenter() (lowerLeft Point) {
 	return
 }
 
-func (menu *Menu) KeyPress(key glfw.Key) {
+func (menu *Menu) KeyPress(key glfw.Key, withShift bool) {
 	for i := range menu.TextBoxes {
-		menu.TextBoxes[i].KeyPress(key)
+		menu.TextBoxes[i].KeyPress(key, withShift)
 	}
 }
