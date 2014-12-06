@@ -74,7 +74,7 @@ type Menu struct {
 	vao           uint32
 	vbo           uint32
 	ebo           uint32
-	ortho         mgl32.Mat4
+	ortho         *mgl32.Mat4
 	vboData       []float32
 	vboIndexCount int
 	eboData       []int32
@@ -217,7 +217,7 @@ func (menu *Menu) ResizeWindow(width float32, height float32) {
 	menu.WindowWidth = width
 	menu.WindowHeight = height
 	menu.Font.ResizeWindow(width, height)
-	menu.ortho = mgl32.Ortho2D(-menu.WindowWidth/2, menu.WindowWidth/2, -menu.WindowHeight/2, menu.WindowHeight/2)
+	menu.ortho = menu.Font.GetOrtho()
 }
 
 func (menu *Menu) makeBufferData() {

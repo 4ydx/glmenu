@@ -6,7 +6,28 @@ import (
 	"time"
 )
 
-// 2DO: code to render the box around the text
+var textboxVertexShader string = `
+#version 330
+
+uniform mat4 matrix;
+
+in vec4 position;
+
+void main() {
+  gl_Position = matrix * position;
+}
+` + "\x00"
+
+var textboxFragmentShader string = `
+#version 330
+
+uniform vec4 background;
+out vec4 fragment_color;
+
+void main() {
+  fragment_color = background;
+}
+` + "\x00"
 
 type TextBoxInteraction func(
 	textbox *TextBox,
@@ -25,6 +46,18 @@ type TextBox struct {
 	CursorBarFrequency int64
 	Time               time.Time
 	IsEdit             bool
+
+	// opengl oriented
+	program       uint32
+	glMatrix      int32
+	position      uint32
+	vao           uint32
+	vbo           uint32
+	ebo           uint32
+	vboData       []float32
+	vboIndexCount int
+	eboData       []float32
+	eboIndexCount int
 }
 
 func (textbox *TextBox) Load(menu *Menu, font *gltext.Font) {
