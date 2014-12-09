@@ -74,7 +74,6 @@ type Menu struct {
 	vao           uint32
 	vbo           uint32
 	ebo           uint32
-	ortho         *mgl32.Mat4
 	vboData       []float32
 	vboIndexCount int
 	eboData       []int32
@@ -90,8 +89,8 @@ func (menu *Menu) AddLabel(label *Label, str string) {
 	menu.Labels = append(menu.Labels, label)
 }
 
-func (menu *Menu) AddTextBox(textbox *TextBox, str string) {
-	textbox.Load(menu, menu.Font)
+func (menu *Menu) AddTextBox(textbox *TextBox, str string, width int32, height int32, borderWidth int32) {
+	textbox.Load(menu, menu.Font, width, height, borderWidth)
 	textbox.SetString(str)
 	textbox.Text.SetScale(1)
 	textbox.Text.SetPosition(0, 0)
@@ -217,7 +216,6 @@ func (menu *Menu) ResizeWindow(width float32, height float32) {
 	menu.WindowWidth = width
 	menu.WindowHeight = height
 	menu.Font.ResizeWindow(width, height)
-	menu.ortho = menu.Font.GetOrtho()
 }
 
 func (menu *Menu) makeBufferData() {
@@ -266,7 +264,7 @@ func (menu *Menu) Draw() bool {
 	}
 	gl.UseProgram(menu.program)
 
-	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.ortho[0])
+	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.Font.OrthographicMatrix[0])
 	gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Background[0])
 
 	gl.BindVertexArray(menu.vao)
