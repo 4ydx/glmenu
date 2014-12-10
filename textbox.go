@@ -43,13 +43,15 @@ type TextBoxInteraction func(
 type TextBox struct {
 	Menu               *Menu
 	Text               *gltext.Text
-	OnClick            TextBoxInteraction
-	IsClick            bool
-	OnRelease          TextBoxInteraction
 	MaxLength          int
 	CursorBarFrequency int64
 	Time               time.Time
 	IsEdit             bool
+	IsClick            bool
+
+	// user defined
+	OnClick   TextBoxInteraction
+	OnRelease TextBoxInteraction
 
 	// opengl oriented
 	program          uint32
@@ -105,8 +107,8 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	}
 
 	// ebo, vbo data
-	// 4 edges with 4 vertices apiece
-	textbox.vboIndexCount = 16 * 2 // 2 position points per index
+	// 4 edges with 4 vertices apiece with 2 position points per index
+	textbox.vboIndexCount = 4 * 4 * 2
 	textbox.eboIndexCount = 24
 	textbox.vboData = make([]float32, textbox.vboIndexCount, textbox.vboIndexCount)
 	textbox.eboData = make([]int32, textbox.eboIndexCount, textbox.eboIndexCount)
@@ -323,6 +325,7 @@ func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
+// typically called by the menu object handling the label
 func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
@@ -339,6 +342,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// typically called by the menu object handling the label
 func (textbox *TextBox) IsReleased(xPos, yPos float64, button MouseClick) {
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
 	X1, X2 := textbox.OrthoToScreenCoord()

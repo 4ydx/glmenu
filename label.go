@@ -12,15 +12,17 @@ type LabelInteraction func(
 )
 
 type Label struct {
-	Menu       *Menu
-	Text       *gltext.Text
+	Menu    *Menu
+	Text    *gltext.Text
+	Shadow  *Shadow
+	IsHover bool
+	IsClick bool
+
+	// user defined
 	OnClick    LabelInteraction
-	IsClick    bool
 	OnRelease  LabelInteraction
 	OnHover    LabelInteraction
 	OnNotHover func(label *Label)
-	IsHover    bool
-	Shadow     *Shadow
 }
 
 type Shadow struct {
@@ -41,6 +43,7 @@ func (label *Label) UpdateShadow(offset, r, g, b float32) {
 	label.Shadow.Text.SetPosition(label.Text.SetPositionX+offset, label.Text.SetPositionY+offset)
 
 	label.Shadow.OnClick = label.OnClick
+	label.Shadow.OnRelease = label.OnRelease
 	label.Shadow.OnHover = label.OnHover
 	label.Shadow.OnNotHover = label.OnNotHover
 }
@@ -81,6 +84,7 @@ func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
+// typically called by the menu object handling the label
 func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
@@ -95,6 +99,7 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// typically called by the menu object handling the label
 func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
 	X1, X2 := label.OrthoToScreenCoord()
@@ -107,6 +112,7 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	label.IsClick = false
 }
 
+// typically called by the menu object handling the label
 func (label *Label) IsHovered(xPos, yPos float64) {
 	X1, X2 := label.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
