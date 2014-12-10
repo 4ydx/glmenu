@@ -76,14 +76,17 @@ type TextBox struct {
 	BorderWidth int32
 	Height      int32
 	Width       int32
+
+	SetPositionX float32
+	SetPositionY float32
 }
 
-func (textbox *TextBox) Load(menu *Menu, font *gltext.Font, width int32, height int32, borderWidth int32) (err error) {
+func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth int32) (err error) {
 	textbox.Menu = menu
 
 	// text
 	textbox.CursorBarFrequency = time.Duration.Nanoseconds(500000000)
-	textbox.Text = gltext.LoadText(font)
+	textbox.Text = gltext.LoadText(menu.Font)
 
 	// border formatting
 	textbox.BorderWidth = borderWidth
@@ -279,6 +282,23 @@ func (textbox *TextBox) AddCharacter(key glfw.Key, withShift bool) {
 		textbox.Text.SetString(string(r) + "|")
 		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 	}
+}
+
+func (textbox *TextBox) SetPosition(x, y float32) {
+	// transform to orthographic coordinates ranged -1 to 1 for the shader
+	textbox.finalPosition[0] = x / (textbox.Menu.Font.WindowWidth / 2)
+	textbox.finalPosition[1] = y / (textbox.Menu.Font.WindowHeight / 2)
+
+	// used for detecting clicks, hovers, etc
+	textbox.X1.X += x
+	textbox.X1.Y += y
+	textbox.X2.X += x
+	textbox.X2.Y += y
+
+	// used to build shadow data and for calling SetPosition again when needed
+	textbox.SetPositionX = x
+	textbox.SetPositionY = y
+	textbox.Text.SetPosition(x, y)
 }
 
 func (textbox *TextBox) Backspace() {

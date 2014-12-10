@@ -90,7 +90,7 @@ func (menu *Menu) AddLabel(label *Label, str string) {
 }
 
 func (menu *Menu) AddTextBox(textbox *TextBox, str string, width int32, height int32, borderWidth int32) {
-	textbox.Load(menu, menu.Font, width, height, borderWidth)
+	textbox.Load(menu, width, height, borderWidth)
 	textbox.SetString(str)
 	textbox.Text.SetScale(1)
 	textbox.Text.SetPosition(0, 0)
