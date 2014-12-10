@@ -315,11 +315,11 @@ func (textbox *TextBox) Backspace() {
 }
 
 func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
-	X1.X = textbox.Text.X1.X + textbox.Menu.WindowWidth/2
-	X1.Y = textbox.Text.X1.Y + textbox.Menu.WindowHeight/2
+	X1.X = textbox.X1.X + textbox.Menu.WindowWidth/2
+	X1.Y = textbox.X1.Y + textbox.Menu.WindowHeight/2
 
-	X2.X = textbox.Text.X2.X + textbox.Menu.WindowWidth/2
-	X2.Y = textbox.Text.X2.Y + textbox.Menu.WindowHeight/2
+	X2.X = textbox.X2.X + textbox.Menu.WindowWidth/2
+	X2.Y = textbox.X2.Y + textbox.Menu.WindowHeight/2
 	return
 }
 
