@@ -103,9 +103,8 @@ func (textbox *TextBox) Load(menu *Menu, font *gltext.Font, width int32, height 
 
 	// ebo, vbo data
 	// 4 edges with 4 vertices apiece
-	//	textbox.vboIndexCount = 16 * 2 // 2 position points per index
-	textbox.vboIndexCount = 8 * 2 // 2 position points per index
-	textbox.eboIndexCount = 12
+	textbox.vboIndexCount = 16 * 2 // 2 position points per index
+	textbox.eboIndexCount = 24
 	textbox.vboData = make([]float32, textbox.vboIndexCount, textbox.vboIndexCount)
 	textbox.eboData = make([]int32, textbox.eboIndexCount, textbox.eboIndexCount)
 	textbox.makeBufferData()
@@ -150,14 +149,21 @@ func (textbox *TextBox) Load(menu *Menu, font *gltext.Font, width int32, height 
 	return
 }
 
+// it is probably best to draw a diagram of what is happening rather than to try to read this code
+// X1: lower left hand point
+// X2: upper right hand point
+// the textbox border is being created by drawing left and right edges whose height include the border
+// the top and bottom edges horizontal width does not include the border
+// keep in mind that each drawn edge is itself its own quad CCW from upper right hand corner
 func (textbox *TextBox) makeBufferData() {
-	// left edge - positions starting at upper right CCW
 	// this all works because the original positioning is centered around the origin
+
+	// left edge - positions starting at upper right CCW
 	textbox.vboData[0] = textbox.X1.X
-	textbox.vboData[1] = textbox.X1.Y + float32(textbox.Height) + float32(textbox.BorderWidth)
+	textbox.vboData[1] = textbox.X2.Y + float32(textbox.BorderWidth)
 
 	textbox.vboData[2] = textbox.X1.X - float32(textbox.BorderWidth)
-	textbox.vboData[3] = textbox.X1.Y + float32(textbox.Height) + float32(textbox.BorderWidth)
+	textbox.vboData[3] = textbox.X2.Y + float32(textbox.BorderWidth)
 
 	textbox.vboData[4] = textbox.X1.X - float32(textbox.BorderWidth)
 	textbox.vboData[5] = textbox.X1.Y - float32(textbox.BorderWidth)
@@ -165,32 +171,52 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[6] = textbox.X1.X
 	textbox.vboData[7] = textbox.X1.Y - float32(textbox.BorderWidth)
 
+	textbox.eboData[0], textbox.eboData[1], textbox.eboData[2], textbox.eboData[3], textbox.eboData[4], textbox.eboData[5] = 0, 1, 2, 0, 2, 3
+
 	// top edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[8] = textbox.X2.X
 	textbox.vboData[9] = textbox.X2.Y + float32(textbox.BorderWidth)
 
-	textbox.vboData[10] = textbox.X2.X - float32(textbox.Width)
+	textbox.vboData[10] = textbox.X1.X
 	textbox.vboData[11] = textbox.X2.Y + float32(textbox.BorderWidth)
 
-	textbox.vboData[12] = textbox.X2.X - float32(textbox.Width)
+	textbox.vboData[12] = textbox.X1.X
 	textbox.vboData[13] = textbox.X2.Y
 
 	textbox.vboData[14] = textbox.X2.X
 	textbox.vboData[15] = textbox.X2.Y
 
-	textbox.eboData[0] = 0
-	textbox.eboData[1] = 1
-	textbox.eboData[2] = 2
-	textbox.eboData[3] = 0
-	textbox.eboData[4] = 2
-	textbox.eboData[5] = 3
+	textbox.eboData[6], textbox.eboData[7], textbox.eboData[8], textbox.eboData[9], textbox.eboData[10], textbox.eboData[11] = 4, 5, 6, 4, 6, 7
 
-	textbox.eboData[6] = 4
-	textbox.eboData[7] = 5
-	textbox.eboData[8] = 6
-	textbox.eboData[9] = 4
-	textbox.eboData[10] = 6
-	textbox.eboData[11] = 7
+	// bottom edge - intentionally leaves out the borderwidth on the x-axis
+	textbox.vboData[16] = textbox.X2.X
+	textbox.vboData[17] = textbox.X1.Y
+
+	textbox.vboData[18] = textbox.X1.X
+	textbox.vboData[19] = textbox.X1.Y
+
+	textbox.vboData[20] = textbox.X1.X
+	textbox.vboData[21] = textbox.X1.Y - float32(textbox.BorderWidth)
+
+	textbox.vboData[22] = textbox.X2.X
+	textbox.vboData[23] = textbox.X1.Y - float32(textbox.BorderWidth)
+
+	textbox.eboData[12], textbox.eboData[13], textbox.eboData[14], textbox.eboData[15], textbox.eboData[16], textbox.eboData[17] = 8, 9, 10, 8, 10, 11
+
+	// right edge
+	textbox.vboData[24] = textbox.X2.X + float32(textbox.BorderWidth)
+	textbox.vboData[25] = textbox.X2.Y + float32(textbox.BorderWidth)
+
+	textbox.vboData[26] = textbox.X2.X
+	textbox.vboData[27] = textbox.X2.Y + float32(textbox.BorderWidth)
+
+	textbox.vboData[28] = textbox.X2.X
+	textbox.vboData[29] = textbox.X1.Y - float32(textbox.BorderWidth)
+
+	textbox.vboData[30] = textbox.X2.X + float32(textbox.BorderWidth)
+	textbox.vboData[31] = textbox.X1.Y - float32(textbox.BorderWidth)
+
+	textbox.eboData[18], textbox.eboData[19], textbox.eboData[20], textbox.eboData[21], textbox.eboData[22], textbox.eboData[23] = 12, 13, 14, 12, 14, 15
 }
 
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {
