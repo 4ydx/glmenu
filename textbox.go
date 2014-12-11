@@ -267,18 +267,21 @@ func (textbox *TextBox) Draw() {
 	gl.Disable(gl.BLEND)
 	gl.UseProgram(textbox.program)
 
+	// draw
+	gl.BindVertexArray(textbox.vao)
+
 	// uniforms
-	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
 	gl.Uniform2fv(textbox.finalPositionUniform, 1, &textbox.finalPosition[0])
 	gl.UniformMatrix4fv(textbox.orthographicMatrixUniform, 1, false, &textbox.Menu.Font.OrthographicMatrix[0])
 
-	// draw
-	gl.BindVertexArray(textbox.vao)
 	// draw border
+	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
 	gl.DrawElements(gl.TRIANGLES, int32(textbox.eboIndexCount-1*6), gl.UNSIGNED_INT, nil)
+
 	// draw background - start drawing after skipping the border vertices
 	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.textBackground[0])
 	gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(1*6), gl.UNSIGNED_INT, nil, int32(16))
+
 	gl.BindVertexArray(0)
 
 	textbox.Text.Draw()
