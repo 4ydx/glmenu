@@ -50,8 +50,9 @@ type TextBox struct {
 	IsClick            bool
 
 	// user defined
-	OnClick   TextBoxInteraction
-	OnRelease TextBoxInteraction
+	OnClick    TextBoxInteraction
+	OnRelease  TextBoxInteraction
+	FilterRune func(r rune) bool
 
 	// opengl oriented
 	program          uint32
@@ -294,17 +295,27 @@ func (textbox *TextBox) KeyPress(key glfw.Key, withShift bool) {
 
 func (textbox *TextBox) AddCharacter(key glfw.Key, withShift bool) {
 	if textbox.Text.HasRune(rune(key)) {
-		var theRune rune
-		if !withShift && key >= 65 && key <= 90 {
-			theRune = rune(key) + 32
-		} else {
-			theRune = rune(key)
+		processRune := true
+		if textbox.FilterRune != nil {
+			processRune = textbox.FilterRune(rune(key))
 		}
-		r := []rune(textbox.Text.String)
-		r = r[0 : len(r)-1] // trim the bar
-		r = append(r, theRune)
-		textbox.Text.SetString(string(r) + "|")
-		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+		if processRune {
+			var theRune rune
+			if !withShift && key >= 65 && key <= 90 {
+				theRune = rune(key) + 32
+			} else {
+				theRune = rune(key)
+			}
+			if textbox.Text.MaxRuneCount > 0 && len(textbox.Text.String) == textbox.Text.MaxRuneCount {
+				// too long
+			} else {
+				r := []rune(textbox.Text.String)
+				r = r[0 : len(r)-1] // trim the bar
+				r = append(r, theRune)
+				textbox.Text.SetString(string(r) + "|")
+				textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+			}
+		}
 	}
 }
 
