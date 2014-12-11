@@ -67,7 +67,8 @@ type TextBox struct {
 	centeredPosition uint32
 
 	backgroundUniform         int32
-	background                mgl32.Vec3
+	borderBackground          mgl32.Vec3
+	textBackground            mgl32.Vec3
 	finalPositionUniform      int32
 	finalPosition             mgl32.Vec2
 	orthographicMatrixUniform int32
@@ -98,7 +99,8 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	textbox.X1.Y = -float32(height) / 2.0
 	textbox.X2.X = float32(width) / 2.0
 	textbox.X2.Y = float32(height) / 2.0
-	textbox.background = mgl32.Vec3{1.0, 1.0, 1.0}
+	textbox.borderBackground = mgl32.Vec3{1.0, 1.0, 1.0}
+	textbox.textBackground = mgl32.Vec3{0.0, 0.0, 0.0}
 
 	// create shader program and define attributes and uniforms
 	textbox.program, err = gltext.NewProgram(textboxVertexShader, textboxFragmentShader)
@@ -107,9 +109,10 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	}
 
 	// ebo, vbo data
-	// 4 edges with 4 vertices apiece with 2 position points per index
-	textbox.vboIndexCount = 4 * 4 * 2
-	textbox.eboIndexCount = 24
+	// 4 edges (4 vertices apiece with 2 position points per index)
+	// 1 background square (4 vertices x 2 positions)
+	textbox.vboIndexCount = 4*4*2 + 1*4*2
+	textbox.eboIndexCount = 4*6 + 1*6
 	textbox.vboData = make([]float32, textbox.vboIndexCount, textbox.vboIndexCount)
 	textbox.eboData = make([]int32, textbox.eboIndexCount, textbox.eboIndexCount)
 	textbox.makeBufferData()
@@ -222,6 +225,21 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[31] = textbox.X1.Y - float32(textbox.BorderWidth)
 
 	textbox.eboData[18], textbox.eboData[19], textbox.eboData[20], textbox.eboData[21], textbox.eboData[22], textbox.eboData[23] = 12, 13, 14, 12, 14, 15
+
+	// background
+	textbox.vboData[32] = textbox.X2.X
+	textbox.vboData[33] = textbox.X2.Y
+
+	textbox.vboData[34] = textbox.X1.X
+	textbox.vboData[35] = textbox.X2.Y
+
+	textbox.vboData[36] = textbox.X1.X
+	textbox.vboData[37] = textbox.X1.Y
+
+	textbox.vboData[38] = textbox.X2.X
+	textbox.vboData[39] = textbox.X1.Y
+
+	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
 }
 
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {
@@ -249,13 +267,17 @@ func (textbox *TextBox) Draw() {
 	gl.UseProgram(textbox.program)
 
 	// uniforms
-	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.background[0])
+	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
 	gl.Uniform2fv(textbox.finalPositionUniform, 1, &textbox.finalPosition[0])
 	gl.UniformMatrix4fv(textbox.orthographicMatrixUniform, 1, false, &textbox.Menu.Font.OrthographicMatrix[0])
 
 	// draw
 	gl.BindVertexArray(textbox.vao)
-	gl.DrawElements(gl.TRIANGLES, int32(textbox.eboIndexCount), gl.UNSIGNED_INT, nil)
+	// draw border
+	gl.DrawElements(gl.TRIANGLES, int32(textbox.eboIndexCount-1*6), gl.UNSIGNED_INT, nil)
+	// draw background - start drawing after skipping the border vertices
+	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.textBackground[0])
+	gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(1*6), gl.UNSIGNED_INT, nil, int32(16))
 	gl.BindVertexArray(0)
 
 	textbox.Text.Draw()
