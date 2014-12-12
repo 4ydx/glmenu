@@ -323,11 +323,11 @@ func (textbox *TextBox) KeyPress(key glfw.Key, withShift bool) {
 	case glfw.KeyBackspace:
 		textbox.Backspace()
 	default:
-		textbox.AddCharacter(key, withShift)
+		textbox.AddRune(key, withShift)
 	}
 }
 
-func (textbox *TextBox) AddCharacter(key glfw.Key, withShift bool) {
+func (textbox *TextBox) AddRune(key glfw.Key, withShift bool) {
 	if textbox.Text.HasRune(rune(key)) {
 		processRune := true
 		if textbox.FilterRune != nil {
