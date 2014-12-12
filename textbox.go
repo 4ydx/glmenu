@@ -110,10 +110,11 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	}
 
 	// ebo, vbo data
-	// 4 edges (4 vertices apiece with 2 position points per index)
+	// 4 border edges (4 vertices apiece with 2 position points per index)
 	// 1 background square (4 vertices x 2 positions)
-	textbox.vboIndexCount = 4*4*2 + 1*4*2
-	textbox.eboIndexCount = 4*6 + 1*6
+	// 4 highlight edges (4 vertices apiece with 2 position points per index)
+	textbox.vboIndexCount = 4*4*2 + 1*4*2 + 4*4*2
+	textbox.eboIndexCount = 4*6 + 1*6 + 4*6
 	textbox.vboData = make([]float32, textbox.vboIndexCount, textbox.vboIndexCount)
 	textbox.eboData = make([]int32, textbox.eboIndexCount, textbox.eboIndexCount)
 	textbox.makeBufferData()
@@ -221,6 +222,52 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[38] = textbox.X2.X
 	textbox.vboData[39] = textbox.X1.Y
 	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
+
+	// highlight on focus
+
+	// left edge - positions starting at upper right CCW
+	textbox.vboData[40] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[41] = textbox.X2.Y
+	textbox.vboData[42] = textbox.X1.X
+	textbox.vboData[43] = textbox.X2.Y
+	textbox.vboData[44] = textbox.X1.X
+	textbox.vboData[45] = textbox.X1.Y
+	textbox.vboData[46] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[47] = textbox.X1.Y
+	textbox.eboData[30], textbox.eboData[31], textbox.eboData[32], textbox.eboData[33], textbox.eboData[34], textbox.eboData[35] = 20, 21, 22, 20, 22, 23
+
+	// top edge
+	textbox.vboData[48] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[49] = textbox.X2.Y
+	textbox.vboData[50] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[51] = textbox.X2.Y
+	textbox.vboData[52] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[53] = textbox.X2.Y - float32(textbox.BorderWidth)
+	textbox.vboData[54] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[55] = textbox.X2.Y - float32(textbox.BorderWidth)
+	textbox.eboData[36], textbox.eboData[37], textbox.eboData[38], textbox.eboData[39], textbox.eboData[40], textbox.eboData[41] = 24, 25, 26, 24, 26, 27
+
+	// bottom edge
+	textbox.vboData[56] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[57] = textbox.X1.Y + float32(textbox.BorderWidth)
+	textbox.vboData[58] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[59] = textbox.X1.Y + float32(textbox.BorderWidth)
+	textbox.vboData[60] = textbox.X1.X + float32(textbox.BorderWidth)
+	textbox.vboData[61] = textbox.X1.Y
+	textbox.vboData[62] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[63] = textbox.X1.Y
+	textbox.eboData[42], textbox.eboData[43], textbox.eboData[44], textbox.eboData[45], textbox.eboData[46], textbox.eboData[47] = 28, 29, 30, 28, 30, 31
+
+	// right edge
+	textbox.vboData[64] = textbox.X2.X
+	textbox.vboData[65] = textbox.X2.Y
+	textbox.vboData[66] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[67] = textbox.X2.Y
+	textbox.vboData[68] = textbox.X2.X - float32(textbox.BorderWidth)
+	textbox.vboData[69] = textbox.X1.Y
+	textbox.vboData[70] = textbox.X2.X
+	textbox.vboData[71] = textbox.X1.Y
+	textbox.eboData[48], textbox.eboData[49], textbox.eboData[50], textbox.eboData[51], textbox.eboData[52], textbox.eboData[53] = 32, 33, 34, 32, 34, 35
 }
 
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {
@@ -244,7 +291,6 @@ func (textbox *TextBox) Draw() {
 		// dont show flashing bar unless actually editing
 		textbox.Text.RuneCount = textbox.Text.GetLength() - 1
 	}
-	gl.Disable(gl.BLEND)
 	gl.UseProgram(textbox.program)
 
 	// draw
@@ -254,14 +300,19 @@ func (textbox *TextBox) Draw() {
 	gl.Uniform2fv(textbox.finalPositionUniform, 1, &textbox.finalPosition[0])
 	gl.UniformMatrix4fv(textbox.orthographicMatrixUniform, 1, false, &textbox.Menu.Font.OrthographicMatrix[0])
 
-	// draw border
+	// draw border - 4 * 6: four quads with six indices apiece starting at the beginning of the vbo (0)
 	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
-	gl.DrawElements(gl.TRIANGLES, int32(textbox.eboIndexCount-1*6), gl.UNSIGNED_INT, nil)
+	gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(4*6), gl.UNSIGNED_INT, nil, int32(0))
 
-	// draw background - start drawing after skipping the border vertices
+	// draw background - start drawing after skipping the border vertices (16)
 	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.textBackground[0])
 	gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(1*6), gl.UNSIGNED_INT, nil, int32(16))
 
+	// draw highlight on focus
+	if textbox.IsEdit {
+		gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
+		gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(4*6), gl.UNSIGNED_INT, nil, int32(20))
+	}
 	gl.BindVertexArray(0)
 
 	textbox.Text.Draw()
