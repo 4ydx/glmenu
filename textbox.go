@@ -170,76 +170,56 @@ func (textbox *TextBox) makeBufferData() {
 	// left edge - positions starting at upper right CCW
 	textbox.vboData[0] = textbox.X1.X
 	textbox.vboData[1] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[2] = textbox.X1.X - float32(textbox.BorderWidth)
 	textbox.vboData[3] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[4] = textbox.X1.X - float32(textbox.BorderWidth)
 	textbox.vboData[5] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.vboData[6] = textbox.X1.X
 	textbox.vboData[7] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.eboData[0], textbox.eboData[1], textbox.eboData[2], textbox.eboData[3], textbox.eboData[4], textbox.eboData[5] = 0, 1, 2, 0, 2, 3
 
 	// top edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[8] = textbox.X2.X
 	textbox.vboData[9] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[10] = textbox.X1.X
 	textbox.vboData[11] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[12] = textbox.X1.X
 	textbox.vboData[13] = textbox.X2.Y
-
 	textbox.vboData[14] = textbox.X2.X
 	textbox.vboData[15] = textbox.X2.Y
-
 	textbox.eboData[6], textbox.eboData[7], textbox.eboData[8], textbox.eboData[9], textbox.eboData[10], textbox.eboData[11] = 4, 5, 6, 4, 6, 7
 
 	// bottom edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[16] = textbox.X2.X
 	textbox.vboData[17] = textbox.X1.Y
-
 	textbox.vboData[18] = textbox.X1.X
 	textbox.vboData[19] = textbox.X1.Y
-
 	textbox.vboData[20] = textbox.X1.X
 	textbox.vboData[21] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.vboData[22] = textbox.X2.X
 	textbox.vboData[23] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.eboData[12], textbox.eboData[13], textbox.eboData[14], textbox.eboData[15], textbox.eboData[16], textbox.eboData[17] = 8, 9, 10, 8, 10, 11
 
 	// right edge
 	textbox.vboData[24] = textbox.X2.X + float32(textbox.BorderWidth)
 	textbox.vboData[25] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[26] = textbox.X2.X
 	textbox.vboData[27] = textbox.X2.Y + float32(textbox.BorderWidth)
-
 	textbox.vboData[28] = textbox.X2.X
 	textbox.vboData[29] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.vboData[30] = textbox.X2.X + float32(textbox.BorderWidth)
 	textbox.vboData[31] = textbox.X1.Y - float32(textbox.BorderWidth)
-
 	textbox.eboData[18], textbox.eboData[19], textbox.eboData[20], textbox.eboData[21], textbox.eboData[22], textbox.eboData[23] = 12, 13, 14, 12, 14, 15
 
 	// background
 	textbox.vboData[32] = textbox.X2.X
 	textbox.vboData[33] = textbox.X2.Y
-
 	textbox.vboData[34] = textbox.X1.X
 	textbox.vboData[35] = textbox.X2.Y
-
 	textbox.vboData[36] = textbox.X1.X
 	textbox.vboData[37] = textbox.X1.Y
-
 	textbox.vboData[38] = textbox.X2.X
 	textbox.vboData[39] = textbox.X1.Y
-
 	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
 }
 
