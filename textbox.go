@@ -231,6 +231,7 @@ func (textbox *TextBox) SetString(str string, argv ...interface{}) {
 	}
 }
 
+//TODO bar needs to be independent from the actual text
 func (textbox *TextBox) Draw() {
 	if time.Since(textbox.Time).Nanoseconds() > textbox.CursorBarFrequency {
 		if textbox.Text.RuneCount < textbox.Text.GetLength() {
@@ -265,12 +266,16 @@ func (textbox *TextBox) Draw() {
 	textbox.Text.Draw()
 }
 
-func (textbox *TextBox) KeyPress(key glfw.Key, withShift bool) {
-	switch key {
-	case glfw.KeyBackspace:
-		textbox.Backspace()
-	default:
-		textbox.AddRune(key, withShift)
+func (textbox *TextBox) KeyRelease(key glfw.Key, withShift bool) {
+	if textbox.IsEdit {
+		switch key {
+		case glfw.KeyBackspace:
+			textbox.Backspace()
+		case glfw.KeyEscape:
+			textbox.IsEdit = false
+		default:
+			textbox.AddRune(key, withShift)
+		}
 	}
 }
 
@@ -318,15 +323,13 @@ func (textbox *TextBox) SetPosition(x, y float32) {
 }
 
 func (textbox *TextBox) Backspace() {
-	if textbox.IsEdit {
-		r := []rune(textbox.Text.String)
-		if len(r) > 1 {
-			r = r[0 : len(r)-2]
-			// this will recenter the textbox on the screen
-			textbox.Text.SetString(string(r) + "|")
-			// this will place it back where it was previously positioned
-			textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
-		}
+	r := []rune(textbox.Text.String)
+	if len(r) > 1 {
+		r = r[0 : len(r)-2]
+		// this will recenter the textbox on the screen
+		textbox.Text.SetString(string(r) + "|")
+		// this will place it back where it was previously positioned
+		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 	}
 }
 

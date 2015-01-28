@@ -46,7 +46,8 @@ const (
 
 type Menu struct {
 	//trigger
-	OnShow func()
+	OnShow         func()
+	OnEnterRelease func()
 
 	// options
 	Visible      bool
@@ -340,8 +341,11 @@ func (menu *Menu) findCenter() (lowerLeft Point) {
 	return
 }
 
-func (menu *Menu) KeyPress(key glfw.Key, withShift bool) {
+func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 	for i := range menu.TextBoxes {
-		menu.TextBoxes[i].KeyPress(key, withShift)
+		menu.TextBoxes[i].KeyRelease(key, withShift)
+	}
+	if menu.OnEnterRelease != nil && key == glfw.KeyEnter {
+		menu.OnEnterRelease()
 	}
 }
