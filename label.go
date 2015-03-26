@@ -1,7 +1,7 @@
-package menu
+package glmenu
 
 import (
-	gltext "github.com/4ydx/gltext"
+	"github.com/4ydx/gltext"
 )
 
 type LabelInteraction func(

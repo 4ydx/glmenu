@@ -1,9 +1,9 @@
-package menu
+package glmenu
 
 import (
-	gltext "github.com/4ydx/gltext"
-	glfw "github.com/go-gl/glfw3"
-	"github.com/go-gl/glow/gl-core/3.3/gl"
+	"github.com/4ydx/gltext"
+	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"os"
 )
