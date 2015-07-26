@@ -20,7 +20,7 @@ uniform mat4 matrix;
 in vec4 position;
 
 void main() {
-  gl_Position = matrix * p;
+  gl_Position = matrix * position;
 }
 ` + "\x00"
 
