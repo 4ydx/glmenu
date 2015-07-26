@@ -20,7 +20,7 @@ uniform mat4 matrix;
 in vec4 position;
 
 void main() {
-  gl_Position = matrix * position;
+  gl_Position = matrix * p;
 }
 ` + "\x00"
 
@@ -292,12 +292,6 @@ func (menu *Menu) Draw() bool {
 		menu.TextBoxes[i].Draw()
 	}
 	return menu.Visible
-}
-
-func (menu *Menu) OrthoToMouseCoord() (x, y float32) {
-	x = menu.lowerLeft.X + menu.WindowWidth/2
-	y = menu.lowerLeft.Y + menu.WindowHeight/2
-	return
 }
 
 func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
