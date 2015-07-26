@@ -268,9 +268,15 @@ func (menu *Menu) Draw() bool {
 	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.Font.OrthographicMatrix[0])
 	gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Background[0])
 
+	gl.Enable(gl.BLEND)
+	gl.BlendEquation(gl.FUNC_ADD)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
 	gl.BindVertexArray(0)
+	gl.Disable(gl.BLEND)
+
 	for i := range menu.Labels {
 		if !menu.Labels[i].IsHover {
 			if menu.Labels[i].OnNotHover != nil {
