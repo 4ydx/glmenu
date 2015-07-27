@@ -123,7 +123,8 @@ func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
+// Load will draw a background centered on the screen or positioned based on offsetBy values
+func (menu *Menu) Load(width float32, height float32, scale int32, offsetBy mgl32.Vec2) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
@@ -194,7 +195,7 @@ func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
 	menu.eboIndexCount = 6     // 6 triangle indices for a quad
 	menu.vboData = make([]float32, menu.vboIndexCount, menu.vboIndexCount)
 	menu.eboData = make([]int32, menu.eboIndexCount, menu.eboIndexCount)
-	menu.lowerLeft = menu.findCenter()
+	menu.lowerLeft = menu.findCenter(offsetBy)
 	menu.makeBufferData()
 
 	// setup context
@@ -332,12 +333,12 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	}
 }
 
-func (menu *Menu) findCenter() (lowerLeft Point) {
+func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = -menuWidthHalf
-	lowerLeft.Y = -menuHeightHalf
+	lowerLeft.X = -menuWidthHalf + offsetBy.X()
+	lowerLeft.Y = -menuHeightHalf + offsetBy.Y()
 	return
 }
 
