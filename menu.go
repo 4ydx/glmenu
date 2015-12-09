@@ -124,7 +124,8 @@ func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6) (err error) {
+// Load will draw a background centered on the screen or positioned based on offsetBy values
+func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offsetBy mgl32.Vec2) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
@@ -195,7 +196,7 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6) (err 
 	menu.eboIndexCount = 6     // 6 triangle indices for a quad
 	menu.vboData = make([]float32, menu.vboIndexCount, menu.vboIndexCount)
 	menu.eboData = make([]int32, menu.eboIndexCount, menu.eboIndexCount)
-	menu.lowerLeft = menu.findCenter()
+	menu.lowerLeft = menu.findCenter(offsetBy)
 	menu.makeBufferData()
 
 	// setup context
@@ -269,9 +270,15 @@ func (menu *Menu) Draw() bool {
 	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.Font.OrthographicMatrix[0])
 	gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Background[0])
 
+	gl.Enable(gl.BLEND)
+	gl.BlendEquation(gl.FUNC_ADD)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
 	gl.BindVertexArray(menu.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
 	gl.BindVertexArray(0)
+	gl.Disable(gl.BLEND)
+
 	for i := range menu.Labels {
 		if !menu.Labels[i].IsHover {
 			if menu.Labels[i].OnNotHover != nil {
@@ -287,12 +294,6 @@ func (menu *Menu) Draw() bool {
 		menu.TextBoxes[i].Draw()
 	}
 	return menu.Visible
-}
-
-func (menu *Menu) OrthoToMouseCoord() (x, y float32) {
-	x = menu.lowerLeft.X + menu.WindowWidth/2
-	y = menu.lowerLeft.Y + menu.WindowHeight/2
-	return
 }
 
 func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
@@ -333,12 +334,12 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	}
 }
 
-func (menu *Menu) findCenter() (lowerLeft Point) {
+func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = -menuWidthHalf
-	lowerLeft.Y = -menuHeightHalf
+	lowerLeft.X = -menuWidthHalf + offsetBy.X()
+	lowerLeft.Y = -menuHeightHalf + offsetBy.Y()
 	return
 }
 
