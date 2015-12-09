@@ -5,6 +5,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/go-gl/mathgl/mgl32"
+	"golang.org/x/image/math/fixed"
 	"os"
 )
 
@@ -123,7 +124,7 @@ func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-func (menu *Menu) Load(width float32, height float32, scale int32) (err error) {
+func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6) (err error) {
 	glfloat_size := 4
 	glint_size := 4
 
