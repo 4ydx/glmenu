@@ -82,13 +82,14 @@ type Menu struct {
 	eboIndexCount int
 }
 
-func (menu *Menu) AddLabel(label *Label, str string) {
-	label.Load(menu, menu.Font)
-	label.SetString(str)
+func (menu *Menu) NewLabel(str string) *Label {
+	label := &Label{}
+	label.Menu = menu
+	label.Text = gltext.NewText(menu.Font, 1.0, 1.1)
 	label.Text.SetScale(1)
-	label.Text.SetPosition(0, 0)
-	label.Text.SetColor(0, 0, 0)
+	label.SetString(str)
 	menu.Labels = append(menu.Labels, label)
+	return label
 }
 
 func (menu *Menu) AddTextBox(textbox *TextBox, str string, width int32, height int32, borderWidth int32) {
