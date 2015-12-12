@@ -5,8 +5,6 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-	"golang.org/x/image/math/fixed"
-	"os"
 )
 
 type Point struct {
@@ -126,38 +124,24 @@ func (menu *Menu) Toggle() {
 	menu.Visible = !menu.Visible
 }
 
-// Load will draw a background centered on the screen or positioned based on offsetBy values
-func NewMenu(width float32, height float32, scale fixed.Int26_6, offsetBy mgl32.Vec2) (*Menu, error) {
+// NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
+func NewMenu(font *gltext.Font, width float32, height float32, offsetBy mgl32.Vec2) (*Menu, error) {
 	glfloat_size := 4
 	glint_size := 4
 
-	menu := &Menu{}
-	menu.Visible = false
-	menu.ShowOnKey = glfw.KeyM
-	menu.Width = width
-	menu.Height = height
-
-	// load font
-	fd, err := os.Open("font/luximr.ttf")
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	runesPerRow := fixed.Int26_6(16)
-	runeRanges := make(gltext.RuneRanges, 0)
-	runeRange := gltext.RuneRange{Low: 32, High: 127}
-	runeRanges = append(runeRanges, runeRange)
-
-	menu.Font, err = gltext.NewTruetype(fd, scale, runeRanges, runesPerRow)
-	if err != nil {
-		return nil, err
+	menu := &Menu{
+		Font:      font,
+		Visible:   false,
+		ShowOnKey: glfw.KeyM,
+		Width:     width,
+		Height:    height,
 	}
 
 	// 2DO: make this time dependent rather than fps dependent
 	menu.TextScaleRate = 0.01
 
 	// create shader program and define attributes and uniforms
+	var err error
 	menu.program, err = gltext.NewProgram(vertexShaderSource, fragmentShaderSource)
 	if err != nil {
 		return nil, err
