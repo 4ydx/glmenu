@@ -125,10 +125,11 @@ func (menu *Menu) Toggle() {
 }
 
 // Load will draw a background centered on the screen or positioned based on offsetBy values
-func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offsetBy mgl32.Vec2) (err error) {
+func NewMenu(width float32, height float32, scale fixed.Int26_6, offsetBy mgl32.Vec2) (*Menu, error) {
 	glfloat_size := 4
 	glint_size := 4
 
+	menu := &Menu{}
 	menu.Visible = false
 	menu.ShowOnKey = glfw.KeyM
 	menu.Width = width
@@ -137,7 +138,7 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offse
 	// load font
 	fd, err := os.Open("font/luximr.ttf")
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer fd.Close()
 
@@ -148,7 +149,7 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offse
 
 	menu.Font, err = gltext.NewTruetype(fd, scale, runeRanges, runesPerRow)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// 2DO: make this time dependent rather than fps dependent
@@ -157,7 +158,7 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offse
 	// create shader program and define attributes and uniforms
 	menu.program, err = gltext.NewProgram(vertexShaderSource, fragmentShaderSource)
 	if err != nil {
-		return
+		return nil, err
 	}
 	menu.glMatrix = gl.GetUniformLocation(menu.program, gl.Str("matrix\x00"))
 	menu.backgroundUniform = gl.GetUniformLocation(menu.program, gl.Str("background\x00"))
@@ -217,7 +218,7 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offse
 	// not necesssary, but i just want to better understand using vertex arrays
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-	return nil
+	return menu, nil
 }
 
 func (menu *Menu) ResizeWindow(width float32, height float32) {
