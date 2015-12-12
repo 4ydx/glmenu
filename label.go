@@ -33,10 +33,10 @@ type Shadow struct {
 func (label *Label) NewShadow(offset, r, g, b float32) {
 	label.Shadow = &Shadow{}
 	label.Shadow.Menu = label.Menu
-	label.UpdateShadow(offset, r, g, b)
+	label.updateShadow(offset, r, g, b)
 }
 
-func (label *Label) UpdateShadow(offset, r, g, b float32) {
+func (label *Label) updateShadow(offset, r, g, b float32) {
 	label.Shadow.Text = gltext.NewText(label.Menu.Font, 1.0, 1.1)
 	label.Shadow.Text.SetColor(r, g, b)
 	label.Shadow.Text.SetString(label.Text.String)
