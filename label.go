@@ -30,7 +30,7 @@ type Shadow struct {
 	Offset float32
 }
 
-func (label *Label) AddShadow(offset, r, g, b float32) {
+func (label *Label) NewShadow(offset, r, g, b float32) {
 	label.Shadow = &Shadow{}
 	label.Shadow.Menu = label.Menu
 	label.UpdateShadow(offset, r, g, b)

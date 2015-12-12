@@ -83,12 +83,13 @@ type Menu struct {
 }
 
 func (menu *Menu) NewLabel(str string) *Label {
-	label := &Label{}
-	label.Menu = menu
-	label.Text = gltext.NewText(menu.Font, 1.0, 1.1)
-	label.Text.SetScale(1)
-	label.SetString(str)
+	label := &Label{
+		Menu: menu,
+		Text: gltext.NewText(menu.Font, 1.0, 1.1),
+	}
 	menu.Labels = append(menu.Labels, label)
+	label.SetString(str)
+	label.Text.SetScale(1)
 	return label
 }
 
