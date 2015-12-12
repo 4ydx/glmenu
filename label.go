@@ -55,11 +55,6 @@ func (label *Label) Reset() {
 	}
 }
 
-func (label *Label) Load(menu *Menu, font *gltext.Font) {
-	label.Menu = menu
-	label.Text = gltext.NewText(font, 1.0, 1.1)
-}
-
 func (label *Label) SetString(str string, argv ...interface{}) {
 	if len(argv) == 0 {
 		label.Text.SetString(str)
