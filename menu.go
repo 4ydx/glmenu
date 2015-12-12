@@ -141,9 +141,14 @@ func (menu *Menu) Load(width float32, height float32, scale fixed.Int26_6, offse
 	}
 	defer fd.Close()
 
-	menu.Font, err = gltext.LoadTruetype(fd, scale, 32, 127)
+	runesPerRow := fixed.Int26_6(16)
+	runeRanges := make(gltext.RuneRanges, 0)
+	runeRange := gltext.RuneRange{Low: 32, High: 127}
+	runeRanges = append(runeRanges, runeRange)
+
+	menu.Font, err = gltext.NewTruetype(fd, scale, runeRanges, runesPerRow)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	// 2DO: make this time dependent rather than fps dependent

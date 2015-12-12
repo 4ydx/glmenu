@@ -90,7 +90,7 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 
 	// text
 	textbox.CursorBarFrequency = time.Duration.Nanoseconds(500000000)
-	textbox.Text = gltext.LoadText(menu.Font)
+	textbox.Text = gltext.NewText(menu.Font, 1.0, 1.1)
 
 	// border formatting
 	textbox.BorderWidth = borderWidth

@@ -31,13 +31,13 @@ type Shadow struct {
 }
 
 func (label *Label) AddShadow(offset, r, g, b float32) {
-	label.Shadow = new(Shadow)
+	label.Shadow = &Shadow{}
 	label.Shadow.Menu = label.Menu
 	label.UpdateShadow(offset, r, g, b)
 }
 
 func (label *Label) UpdateShadow(offset, r, g, b float32) {
-	label.Shadow.Text = gltext.LoadText(label.Menu.Font)
+	label.Shadow.Text = gltext.NewText(label.Menu.Font, 1.0, 1.1)
 	label.Shadow.Text.SetColor(r, g, b)
 	label.Shadow.Text.SetString(label.Text.String)
 	label.Shadow.Text.SetPosition(label.Text.SetPositionX+offset, label.Text.SetPositionY+offset)
@@ -57,7 +57,7 @@ func (label *Label) Reset() {
 
 func (label *Label) Load(menu *Menu, font *gltext.Font) {
 	label.Menu = menu
-	label.Text = gltext.LoadText(font)
+	label.Text = gltext.NewText(font, 1.0, 1.1)
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {
@@ -76,15 +76,24 @@ func (label *Label) SetString(str string, argv ...interface{}) {
 }
 
 func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
-	X1.X = label.Text.X1.X + label.Menu.WindowWidth/2
-	X1.Y = label.Text.X1.Y + label.Menu.WindowHeight/2
+	if label.Menu != nil && label.Text != nil {
+		X1.X = label.Text.X1.X + label.Menu.WindowWidth/2
+		X1.Y = label.Text.X1.Y + label.Menu.WindowHeight/2
 
-	X2.X = label.Text.X2.X + label.Menu.WindowWidth/2
-	X2.Y = label.Text.X2.Y + label.Menu.WindowHeight/2
+		X2.X = label.Text.X2.X + label.Menu.WindowWidth/2
+		X2.Y = label.Text.X2.Y + label.Menu.WindowHeight/2
+	} else {
+		if label.Menu == nil {
+			MenuDebug("Uninitialized Menu Object")
+		}
+		if label.Text == nil {
+			MenuDebug("Uninitialized Text Object")
+		}
+	}
 	return
 }
 
-// typically called by the menu object handling the label
+// IsClicked uses a bounding box to determine clicks
 func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
@@ -99,7 +108,7 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
-// typically called by the menu object handling the label
+// IsReleased is checked for all labels in a menu when mouseup occurs
 func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
 	X1, X2 := label.OrthoToScreenCoord()
@@ -112,7 +121,7 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	label.IsClick = false
 }
 
-// typically called by the menu object handling the label
+// IsHovered uses a bounding box
 func (label *Label) IsHovered(xPos, yPos float64) {
 	X1, X2 := label.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
