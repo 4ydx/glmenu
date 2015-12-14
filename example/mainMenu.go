@@ -27,8 +27,7 @@ func mainMenuInit(window *glfw.Window, font *gltext.Font) (err error) {
 	mainMenu.Background = mgl32.Vec4{0, 0, .20, 0}
 
 	// start
-	var textbox1 glmenu.TextBox
-	mainMenu.AddTextBox(&textbox1, "127.0.0.1", 250, 40, 1)
+	textbox1 := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox1.Text.SetColor(1, 1, 1)
 	textbox1.Text.MaxRuneCount = 16
 

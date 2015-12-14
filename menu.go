@@ -91,13 +91,15 @@ func (menu *Menu) NewLabel(str string) *Label {
 	return label
 }
 
-func (menu *Menu) AddTextBox(textbox *TextBox, str string, width int32, height int32, borderWidth int32) {
+func (menu *Menu) NewTextBox(str string, width int32, height int32, borderWidth int32) *TextBox {
+	textbox := &TextBox{}
 	textbox.Load(menu, width, height, borderWidth)
 	textbox.SetString(str)
 	textbox.Text.SetScale(1)
 	textbox.Text.SetPosition(0, 0)
 	textbox.Text.SetColor(0, 0, 0)
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
+	return textbox
 }
 
 func (menu *Menu) Show() {

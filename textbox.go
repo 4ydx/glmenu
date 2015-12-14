@@ -158,16 +158,21 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	return
 }
 
-// it is probably best to draw a diagram of what is happening rather than to try to read this code
 // X1: lower left hand point
 // X2: upper right hand point
-// the textbox border is being created by drawing left and right edges whose height include the border
-// the top and bottom edges horizontal width does not include the border
-// keep in mind that each drawn edge is itself its own quad CCW from upper right hand corner
+// using the X1 and X2 values a border is built using 4 quads: left, right, top and bottom
+// - left and right quads expand above and below based on the border width
+// - top and bottom quads horizontal width does not include the border width
 func (textbox *TextBox) makeBufferData() {
 	// this all works because the original positioning is centered around the origin
 
-	// left edge - positions starting at upper right CCW
+	// left border edge
+	// vbo data (ebo data value)
+	// 0,1 (0) -> first  point of the quad which is drawn CCW
+	// 2,3 (1) -> second point
+	// 4,5 (2) -> third  point
+	// 6,7 (3) -> fourth point
+	// one triangle is drawn using 0,1,2 and the next using 0,2,3 - this pattern applies to all edges (left, right, top, bottom)
 	textbox.vboData[0] = textbox.X1.X
 	textbox.vboData[1] = textbox.X2.Y + float32(textbox.BorderWidth)
 	textbox.vboData[2] = textbox.X1.X - float32(textbox.BorderWidth)
@@ -178,7 +183,7 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[7] = textbox.X1.Y - float32(textbox.BorderWidth)
 	textbox.eboData[0], textbox.eboData[1], textbox.eboData[2], textbox.eboData[3], textbox.eboData[4], textbox.eboData[5] = 0, 1, 2, 0, 2, 3
 
-	// top edge - intentionally leaves out the borderwidth on the x-axis
+	// top border edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[8] = textbox.X2.X
 	textbox.vboData[9] = textbox.X2.Y + float32(textbox.BorderWidth)
 	textbox.vboData[10] = textbox.X1.X
@@ -189,7 +194,7 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[15] = textbox.X2.Y
 	textbox.eboData[6], textbox.eboData[7], textbox.eboData[8], textbox.eboData[9], textbox.eboData[10], textbox.eboData[11] = 4, 5, 6, 4, 6, 7
 
-	// bottom edge - intentionally leaves out the borderwidth on the x-axis
+	// bottom border edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[16] = textbox.X2.X
 	textbox.vboData[17] = textbox.X1.Y
 	textbox.vboData[18] = textbox.X1.X
@@ -200,7 +205,7 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.vboData[23] = textbox.X1.Y - float32(textbox.BorderWidth)
 	textbox.eboData[12], textbox.eboData[13], textbox.eboData[14], textbox.eboData[15], textbox.eboData[16], textbox.eboData[17] = 8, 9, 10, 8, 10, 11
 
-	// right edge
+	// right border edge
 	textbox.vboData[24] = textbox.X2.X + float32(textbox.BorderWidth)
 	textbox.vboData[25] = textbox.X2.Y + float32(textbox.BorderWidth)
 	textbox.vboData[26] = textbox.X2.X
@@ -342,7 +347,6 @@ func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
-// typically called by the menu object handling the label
 func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
@@ -359,7 +363,6 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
-// typically called by the menu object handling the label
 func (textbox *TextBox) IsReleased(xPos, yPos float64, button MouseClick) {
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
 	X1, X2 := textbox.OrthoToScreenCoord()
