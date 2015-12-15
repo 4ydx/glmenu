@@ -43,6 +43,7 @@ type TextBoxInteraction func(
 type TextBox struct {
 	Menu               *Menu
 	Text               *gltext.Text
+	Cursor             *gltext.Text
 	MaxLength          int
 	CursorBarFrequency int64
 	Time               time.Time
@@ -91,6 +92,8 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 	// text
 	textbox.CursorBarFrequency = time.Duration.Nanoseconds(500000000)
 	textbox.Text = gltext.NewText(menu.Font, 1.0, 1.1)
+	textbox.Cursor = gltext.NewText(menu.Font, 1.0, 1.1)
+	textbox.Cursor.SetString("|")
 
 	// border formatting
 	textbox.BorderWidth = borderWidth
@@ -228,27 +231,27 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
 }
 
+func (textbox *TextBox) SetColor(r, g, b float32) {
+	textbox.Text.SetColor(r, g, b)
+	textbox.Cursor.SetColor(r, g, b)
+}
+
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {
 	if len(argv) == 0 {
-		textbox.Text.SetString(str + "|")
+		textbox.Text.SetString(str)
 	} else {
-		textbox.Text.SetString(str+"|", argv)
+		textbox.Text.SetString(str, argv)
 	}
 }
 
-//TODO bar needs to be independent from the actual text
 func (textbox *TextBox) Draw() {
 	if time.Since(textbox.Time).Nanoseconds() > textbox.CursorBarFrequency {
-		if textbox.Text.RuneCount < textbox.Text.GetLength() {
-			textbox.Text.RuneCount = textbox.Text.GetLength()
+		if textbox.Cursor.RuneCount == 0 && textbox.IsEdit {
+			textbox.Cursor.RuneCount = 1
 		} else {
-			textbox.Text.RuneCount -= 1
+			textbox.Cursor.RuneCount = 0
 		}
 		textbox.Time = time.Now()
-	}
-	if !textbox.IsEdit {
-		// dont show flashing bar unless actually editing
-		textbox.Text.RuneCount = textbox.Text.GetLength() - 1
 	}
 	gl.UseProgram(textbox.program)
 
@@ -269,6 +272,7 @@ func (textbox *TextBox) Draw() {
 	gl.BindVertexArray(0)
 
 	textbox.Text.Draw()
+	textbox.Cursor.Draw()
 }
 
 func (textbox *TextBox) KeyRelease(key glfw.Key, withShift bool) {
@@ -298,12 +302,11 @@ func (textbox *TextBox) AddRune(key glfw.Key, withShift bool) {
 				theRune = rune(key)
 			}
 			if textbox.Text.MaxRuneCount > 0 && len(textbox.Text.String) == textbox.Text.MaxRuneCount {
-				// too long
+				// too long - do nothing
 			} else {
 				r := []rune(textbox.Text.String)
-				r = r[0 : len(r)-1] // trim the bar
 				r = append(r, theRune)
-				textbox.Text.SetString(string(r) + "|")
+				textbox.Text.SetString(string(r))
 				textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 			}
 		}
@@ -325,14 +328,15 @@ func (textbox *TextBox) SetPosition(x, y float32) {
 	textbox.SetPositionX = x
 	textbox.SetPositionY = y
 	textbox.Text.SetPosition(x, y)
+	textbox.Cursor.SetPosition(x, y)
 }
 
 func (textbox *TextBox) Backspace() {
 	r := []rune(textbox.Text.String)
-	if len(r) > 1 {
-		r = r[0 : len(r)-2]
+	if len(r) > 0 {
+		r = r[0 : len(r)-1]
 		// this will recenter the textbox on the screen
-		textbox.Text.SetString(string(r) + "|")
+		textbox.Text.SetString(string(r))
 		// this will place it back where it was previously positioned
 		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 	}
@@ -351,9 +355,20 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
 	// we have to transform them
+	/*
+		fmt.Println("--------------")
+		fmt.Println("x", xPos, "->", xPos-float64(textbox.Menu.WindowWidth/2))
+		textbox.Text.PrintCharSpacing()
+		i, c := textbox.Text.ClickedCharacter(xPos)
+		fmt.Printf("\ngot: index %d side %d\n", i, c)
+	*/
+
 	X1, X2 := textbox.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
+		// wtf to do now...
+		index, _ := textbox.Text.ClickedCharacter(xPos)
+		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
 		textbox.IsClick = true
 		if textbox.OnClick != nil {
 			textbox.OnClick(textbox, xPos, yPos, button, inBox)
