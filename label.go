@@ -5,7 +5,7 @@ import (
 )
 
 type LabelInteraction func(
-	label *Label,
+	//label *Label,
 	xPos, yPos float64,
 	button MouseClick,
 	isInBoundingBox bool,
@@ -18,11 +18,11 @@ type Label struct {
 	IsHover bool
 	IsClick bool
 
-	// user defined
+	// defaults exist but can be user defined
 	OnClick    LabelInteraction
 	OnRelease  LabelInteraction
 	OnHover    LabelInteraction
-	OnNotHover func(label *Label)
+	OnNotHover func()
 }
 
 type Shadow struct {
@@ -41,11 +41,6 @@ func (label *Label) updateShadow(offset, r, g, b float32) {
 	label.Shadow.Text.SetColor(r, g, b)
 	label.Shadow.Text.SetString(label.Text.String)
 	label.Shadow.Text.SetPosition(label.Text.SetPositionX+offset, label.Text.SetPositionY+offset)
-
-	label.Shadow.OnClick = label.OnClick
-	label.Shadow.OnRelease = label.OnRelease
-	label.Shadow.OnHover = label.OnHover
-	label.Shadow.OnNotHover = label.OnNotHover
 }
 
 func (label *Label) Reset() {
@@ -98,7 +93,8 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	if inBox {
 		label.IsClick = true
 		if label.OnClick != nil {
-			label.OnClick(label, xPos, yPos, button, inBox)
+			//label.OnClick(label, xPos, yPos, button, inBox)
+			label.OnClick(xPos, yPos, button, inBox)
 		}
 	}
 }
@@ -110,7 +106,7 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if label.IsClick {
 		if label.OnRelease != nil {
-			label.OnRelease(label, xPos, yPos, button, inBox)
+			label.OnRelease(xPos, yPos, button, inBox)
 		}
 	}
 	label.IsClick = false
@@ -122,10 +118,7 @@ func (label *Label) IsHovered(xPos, yPos float64) {
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	label.IsHover = inBox
 	if inBox {
-		label.OnHover(label, xPos, yPos, MouseUnclicked, inBox)
-		if label.Shadow != nil {
-			label.OnHover(&label.Shadow.Label, xPos, yPos, MouseUnclicked, inBox)
-		}
+		label.OnHover(xPos, yPos, MouseUnclicked, inBox)
 	}
 }
 
