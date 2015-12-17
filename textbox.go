@@ -367,7 +367,12 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
 		// wtf to do now...
-		index, _ := textbox.Text.ClickedCharacter(xPos)
+		index, side := textbox.Text.ClickedCharacter(xPos)
+		if side == gltext.CSRight {
+			index++
+		}
+		textbox.Cursor.RuneCount = 1
+		textbox.Time = time.Now()
 		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
 		textbox.IsClick = true
 		if textbox.OnClick != nil {
