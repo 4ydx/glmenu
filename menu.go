@@ -1,7 +1,6 @@
 package glmenu
 
 import (
-	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -66,6 +65,7 @@ type Menu struct {
 	Labels      []*Label
 	LabelBorder Border
 	TextBoxes   []*TextBox
+	Formatable  []Formatable
 
 	// increment during a scale operation
 	TextScaleRate float32
@@ -97,76 +97,55 @@ func (menu *Menu) NewLabel(str string) *Label {
 		Text: gltext.NewText(menu.Font, 1.0, 1.1),
 	}
 	menu.Labels = append(menu.Labels, label)
+	menu.Formatable = append(menu.Formatable, label)
+
 	label.SetString(str)
 	label.Text.SetScale(1)
 
-	length := len(menu.Labels)
-	if length == 1 {
-		return label
-	}
-
-	// format multiple labels
-	height := float32(0)
-	for _, l := range menu.Labels {
-		if l.Text.Height() > height {
-			height = l.Text.Height()
-		}
-	}
-
-	middleIndex := int(math.Floor(float64(length / 2)))
-	verticalOffset := height + menu.LabelBorder.Y*2
-
-	switch length % 2 {
-	case 0:
-		// even number of menu objects
-		// the menu objects just around the center have slightly different spacing than the others
-		/*
-			for i, l := range menu.Labels {
-				if i == middleIndex || i+1 == middleIndex {
-					// hugging the center
-					offset := float32(middleIndex-i-1) * verticalOffset / 2
-					l.Text.SetPosition(0, offset)
-				} else {
-					offset := float32(middleIndex-i) * verticalOffset
-					if i < middleIndex {
-						offset += verticalOffset / 2
-					} else {
-						offset -= verticalOffset / 2
-					}
-					l.Text.ResetPosition(0, offset)
-				}
-			}
-		*/
-	case 1:
-		// odd number of menu objects
-		// one of the labels/textboxes is centered exactly in the menu
-		// the menu objects are expected to exist in the order they were created from top to bottom (0 index is top)
-		// initially all objects are placed in the middle of the menu - SetString places them around the origin
-		for i, l := range menu.Labels {
-			if i == middleIndex {
-				// exact center - do nothing
-				fmt.Println("center", i, l.Text.String, "middle", middleIndex)
-			} else {
-				fmt.Println("resetting", i, l.Text.String)
-				offset := float32(middleIndex-i) * verticalOffset
-				l.Text.SetString(l.Text.String)
-				l.Text.SetPosition(0, offset)
-			}
-		}
-	}
+	menu.format()
 	return label
 }
 
+func (menu *Menu) format() {
+	length := len(menu.Formatable)
+	if length == 1 {
+		return
+	}
+	height := float32(0)
+	for _, l := range menu.Formatable {
+		if l.Height() > height {
+			height = l.Height()
+		}
+	}
+	// not easily understood perhaps - formatting these things never is!
+	// depending on the number of menu elements a vertically centered menus formatting will differ
+	middleIndex := float32(math.Floor(float64(length / 2)))
+	verticalOffset := height + menu.LabelBorder.Y*2
+	switch length % 2 {
+	case 0:
+		for i, l := range menu.Formatable {
+			offset := (middleIndex-float32(i)-1)*verticalOffset + verticalOffset/2
+			l.SetPosition(0, offset)
+		}
+	case 1:
+		for i, l := range menu.Formatable {
+			offset := (middleIndex - float32(i)) * verticalOffset
+			l.SetPosition(0, offset)
+		}
+	}
+}
+
 // NewTextBox handles vertical spacing
-func (menu *Menu) NewTextBox(str string, width int32, height int32, borderWidth int32) *TextBox {
+func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int32) *TextBox {
 	textbox := &TextBox{}
 	textbox.Load(menu, width, height, borderWidth)
 	textbox.SetString(str)
 	textbox.Text.SetScale(1)
-	textbox.Text.SetPosition(0, 0)
 	textbox.Text.SetColor(0, 0, 0)
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
+	menu.Formatable = append(menu.Formatable, textbox)
 
+	menu.format()
 	return textbox
 }
 
@@ -314,11 +293,6 @@ func (menu *Menu) Release() {
 	gl.DeleteBuffers(1, &menu.vao)
 	for i := range menu.Labels {
 		menu.Labels[i].Text.Release()
-		/*
-			if menu.Labels[i].Shadow != nil && menu.Labels[i].Shadow.Text != nil {
-				menu.Labels[i].Shadow.Text.Release()
-			}
-		*/
 	}
 	for i := range menu.TextBoxes {
 		menu.TextBoxes[i].Text.Release()
@@ -347,11 +321,6 @@ func (menu *Menu) Draw() bool {
 		if !menu.Labels[i].IsHover {
 			if menu.Labels[i].OnNotHover != nil {
 				menu.Labels[i].OnNotHover()
-				/*
-					if menu.Labels[i].Shadow != nil {
-						menu.Labels[i].Shadow.OnNotHover()
-					}
-				*/
 			}
 		}
 		menu.Labels[i].Draw()

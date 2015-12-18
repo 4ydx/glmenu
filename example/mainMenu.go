@@ -28,11 +28,9 @@ func mainMenuInit(window *glfw.Window, font *gltext.Font) (err error) {
 	mainMenu.Background = mgl32.Vec4{0, 0, .20, 0}
 
 	// start
-	/*
-		textbox1 := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
-		textbox1.SetColor(1, 1, 1)
-		textbox1.Text.MaxRuneCount = 16
-	*/
+	textbox1 := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
+	textbox1.SetColor(1, 1, 1)
+	textbox1.Text.MaxRuneCount = 16
 
 	// options
 	label2 := mainMenu.NewLabel("Options")
@@ -99,16 +97,6 @@ func mainMenuInit(window *glfw.Window, font *gltext.Font) (err error) {
 
 	label4 := mainMenu.NewLabel("Dummy")
 	label4.Text.SetColor(0.5, 0.5, 0.5)
-
-	// simple centering of values
-	/*
-		totalHeight := textbox1.Text.X2.Y - textbox1.Text.X1.Y +
-			label2.Text.X2.Y - label2.Text.X1.Y +
-			label2.Text.X2.Y - label2.Text.X1.Y
-		textbox1.SetPosition(0, totalHeight/2)
-
-		label3.Text.SetPosition(0, -totalHeight/2)
-	*/
 
 	return
 }

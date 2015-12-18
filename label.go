@@ -96,5 +96,12 @@ func (label *Label) IsHovered(xPos, yPos float64) {
 
 func (label *Label) Draw() {
 	label.Text.Draw()
+}
 
+func (label *Label) SetPosition(x, y float32) {
+	label.Text.SetPosition(x, y)
+}
+
+func (label *Label) Height() float32 {
+	return label.Text.Height()
 }

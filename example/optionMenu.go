@@ -52,15 +52,9 @@ func optionMenuInit(window *glfw.Window, font *gltext.Font) (err error) {
 	}
 	label3.OnHover = func(xPos, yPos float64, button glmenu.MouseClick, isBox bool) {
 		label3.Text.AddScale(optionMenu.TextScaleRate)
-		if label3.Shadow != nil {
-			label3.Shadow.Text.AddScale(optionMenu.TextScaleRate)
-		}
 	}
 	label3.OnNotHover = func() {
 		label3.Text.AddScale(-optionMenu.TextScaleRate)
-		if label3.Shadow != nil {
-			label3.Shadow.Text.AddScale(-optionMenu.TextScaleRate)
-		}
 	}
 
 	//label1.Text.SetPosition(-float32(width)/2.0+leftMargin, float32(height)/2.0-topMargin)

@@ -79,14 +79,22 @@ type TextBox struct {
 	X1          Point
 	X2          Point
 	BorderWidth int32
-	Height      int32
-	Width       int32
+	height      float32
+	width       float32
 
 	SetPositionX float32
 	SetPositionY float32
 }
 
-func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth int32) (err error) {
+func (textbox *TextBox) Height() float32 {
+	return textbox.height
+}
+
+func (textbox *TextBox) Width() float32 {
+	return textbox.width
+}
+
+func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int32) (err error) {
 	textbox.Menu = menu
 
 	// text
@@ -97,8 +105,8 @@ func (textbox *TextBox) Load(menu *Menu, width int32, height int32, borderWidth 
 
 	// border formatting
 	textbox.BorderWidth = borderWidth
-	textbox.Height = height
-	textbox.Width = width
+	textbox.height = height
+	textbox.width = width
 	textbox.X1.X = -float32(width) / 2.0
 	textbox.X1.Y = -float32(height) / 2.0
 	textbox.X2.X = float32(width) / 2.0
@@ -318,17 +326,20 @@ func (textbox *TextBox) SetPosition(x, y float32) {
 	textbox.finalPosition[0] = x / (textbox.Menu.Font.WindowWidth / 2)
 	textbox.finalPosition[1] = y / (textbox.Menu.Font.WindowHeight / 2)
 
-	// used for detecting clicks, hovers, etc
-	textbox.X1.X += x
-	textbox.X1.Y += y
-	textbox.X2.X += x
-	textbox.X2.Y += y
-
 	// used to build shadow data and for calling SetPosition again when needed
 	textbox.SetPositionX = x
 	textbox.SetPositionY = y
 	textbox.Text.SetPosition(x, y)
 	textbox.Cursor.SetPosition(x, y)
+}
+
+func (textbox *TextBox) GetBoundingBox() (X1, X2 Point) {
+	x, y := textbox.SetPositionX, textbox.SetPositionY
+	X1.X = textbox.X1.X + x
+	X1.Y = textbox.X1.Y + y
+	X2.X = textbox.X2.X + x
+	X2.Y = textbox.X2.Y + y
+	return
 }
 
 func (textbox *TextBox) Backspace() {
@@ -343,11 +354,12 @@ func (textbox *TextBox) Backspace() {
 }
 
 func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
-	X1.X = textbox.X1.X + textbox.Menu.WindowWidth/2
-	X1.Y = textbox.X1.Y + textbox.Menu.WindowHeight/2
+	x1, x2 := textbox.GetBoundingBox()
+	X1.X = x1.X + textbox.Menu.WindowWidth/2
+	X1.Y = x1.Y + textbox.Menu.WindowHeight/2
 
-	X2.X = textbox.X2.X + textbox.Menu.WindowWidth/2
-	X2.Y = textbox.X2.Y + textbox.Menu.WindowHeight/2
+	X2.X = x2.X + textbox.Menu.WindowWidth/2
+	X2.Y = x2.Y + textbox.Menu.WindowHeight/2
 	return
 }
 
