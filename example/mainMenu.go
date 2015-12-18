@@ -25,7 +25,7 @@ func mainMenuInit(window *glfw.Window, font *gltext.Font) (err error) {
 		os.Exit(1)
 	}
 	mainMenu.ResizeWindow(float32(width), float32(height))
-	mainMenu.Background = mgl32.Vec4{0, 0, .20, 0}
+	mainMenu.Background = mgl32.Vec4{0, 0, .50, 0}
 
 	// start
 	textbox1 := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
