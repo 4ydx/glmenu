@@ -44,8 +44,9 @@ type TextBox struct {
 	Menu               *Menu
 	Text               *gltext.Text
 	Cursor             *gltext.Text
-	MaxLength          int
+	CursorIndex        int
 	CursorBarFrequency int64
+	MaxLength          int
 	Time               time.Time
 	IsEdit             bool
 	IsClick            bool
@@ -291,12 +292,12 @@ func (textbox *TextBox) KeyRelease(key glfw.Key, withShift bool) {
 		case glfw.KeyEscape:
 			textbox.IsEdit = false
 		default:
-			textbox.AddRune(key, withShift)
+			textbox.Edit(key, withShift)
 		}
 	}
 }
 
-func (textbox *TextBox) AddRune(key glfw.Key, withShift bool) {
+func (textbox *TextBox) Edit(key glfw.Key, withShift bool) {
 	if textbox.Text.HasRune(rune(key)) {
 		processRune := true
 		if textbox.FilterRune != nil {
@@ -312,10 +313,15 @@ func (textbox *TextBox) AddRune(key glfw.Key, withShift bool) {
 			if textbox.Text.MaxRuneCount > 0 && len(textbox.Text.String) == textbox.Text.MaxRuneCount {
 				// too long - do nothing
 			} else {
-				r := []rune(textbox.Text.String)
-				r = append(r, theRune)
+				index := textbox.CursorIndex
+				r := make([]rune, len(textbox.Text.String)+1)
+				copy(r, []rune(textbox.Text.String))
+				copy(r[index+1:], r[index:])
+				r[index] = theRune
+
 				textbox.Text.SetString(string(r))
 				textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+				textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
 			}
 		}
 	}
@@ -367,14 +373,6 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
 	// we have to transform them
-	/*
-		fmt.Println("--------------")
-		fmt.Println("x", xPos, "->", xPos-float64(textbox.Menu.WindowWidth/2))
-		textbox.Text.PrintCharSpacing()
-		i, c := textbox.Text.ClickedCharacter(xPos)
-		fmt.Printf("\ngot: index %d side %d\n", i, c)
-	*/
-
 	X1, X2 := textbox.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
@@ -383,6 +381,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 		if side == gltext.CSRight {
 			index++
 		}
+		textbox.CursorIndex = index
 		textbox.Cursor.RuneCount = 1
 		textbox.Time = time.Now()
 		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
