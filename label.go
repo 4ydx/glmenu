@@ -14,7 +14,6 @@ type LabelInteraction func(
 type Label struct {
 	Menu    *Menu
 	Text    *gltext.Text
-	Shadow  *Shadow
 	IsHover bool
 	IsClick bool
 
@@ -25,29 +24,8 @@ type Label struct {
 	OnNotHover func()
 }
 
-type Shadow struct {
-	Label
-	Offset float32
-}
-
-func (label *Label) NewShadow(offset, r, g, b float32) {
-	label.Shadow = &Shadow{}
-	label.Shadow.Menu = label.Menu
-	label.updateShadow(offset, r, g, b)
-}
-
-func (label *Label) updateShadow(offset, r, g, b float32) {
-	label.Shadow.Text = gltext.NewText(label.Menu.Font, 1.0, 1.1)
-	label.Shadow.Text.SetColor(r, g, b)
-	label.Shadow.Text.SetString(label.Text.String)
-	label.Shadow.Text.SetPosition(label.Text.SetPositionX+offset, label.Text.SetPositionY+offset)
-}
-
 func (label *Label) Reset() {
 	label.Text.SetScale(label.Text.ScaleMin)
-	if label.Shadow != nil {
-		label.Shadow.Text.SetScale(label.Text.ScaleMin)
-	}
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {
@@ -56,22 +34,16 @@ func (label *Label) SetString(str string, argv ...interface{}) {
 	} else {
 		label.Text.SetString(str, argv)
 	}
-	if label.Shadow != nil {
-		if len(argv) == 0 {
-			label.Shadow.Text.SetString(str)
-		} else {
-			label.Shadow.Text.SetString(str, argv)
-		}
-	}
 }
 
 func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	if label.Menu != nil && label.Text != nil {
-		X1.X = label.Text.X1.X + label.Menu.WindowWidth/2
-		X1.Y = label.Text.X1.Y + label.Menu.WindowHeight/2
+		x1, x2 := label.Text.GetBoundingBox()
+		X1.X = x1.X + label.Menu.WindowWidth/2
+		X1.Y = x1.Y + label.Menu.WindowHeight/2
 
-		X2.X = label.Text.X2.X + label.Menu.WindowWidth/2
-		X2.Y = label.Text.X2.Y + label.Menu.WindowHeight/2
+		X2.X = x2.X + label.Menu.WindowWidth/2
+		X2.Y = x2.Y + label.Menu.WindowHeight/2
 	} else {
 		if label.Menu == nil {
 			MenuDebug("Uninitialized Menu Object")
@@ -123,8 +95,6 @@ func (label *Label) IsHovered(xPos, yPos float64) {
 }
 
 func (label *Label) Draw() {
-	if label.Shadow != nil {
-		label.Shadow.Text.Draw()
-	}
 	label.Text.Draw()
+
 }
