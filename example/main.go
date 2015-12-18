@@ -66,7 +66,6 @@ func main() {
 	var err error
 
 	runtime.LockOSThread()
-
 	err = glfw.Init()
 	if err != nil {
 		panic("glfw error")

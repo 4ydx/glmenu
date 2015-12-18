@@ -319,6 +319,8 @@ func (textbox *TextBox) Edit(key glfw.Key, withShift bool) {
 				copy(r[index+1:], r[index:])
 				r[index] = theRune
 
+				index += 1
+				textbox.CursorIndex = index
 				textbox.Text.SetString(string(r))
 				textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
 				textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
@@ -349,13 +351,18 @@ func (textbox *TextBox) GetBoundingBox() (X1, X2 Point) {
 }
 
 func (textbox *TextBox) Backspace() {
-	r := []rune(textbox.Text.String)
-	if len(r) > 0 {
-		r = r[0 : len(r)-1]
-		// this will recenter the textbox on the screen
+	index := textbox.CursorIndex
+	if len(textbox.Text.String) > 0 && index > 0 {
+		r := make([]rune, len(textbox.Text.String)-1)
+		copy(r, []rune(textbox.Text.String[0:index-1]))
+		copy(r[index-1:], []rune(textbox.Text.String[index:]))
+
+		// shift our cursor back
+		index -= 1
+		textbox.CursorIndex = index
 		textbox.Text.SetString(string(r))
-		// this will place it back where it was previously positioned
 		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
+		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
 	}
 }
 
