@@ -1,18 +1,95 @@
 package glmenu
 
+import (
+	"errors"
+	"fmt"
+	"github.com/4ydx/gltext"
+	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/go-gl/mathgl/mgl32"
+)
+
 type MenuManager struct {
-	Menus []Menu
+	Font       *gltext.Font
+	StartKey   glfw.Key
+	Menus      map[string]*Menu
+	IsResolved bool
 }
 
 // ResolveNavigation connects menus together
 // this must be run after all menus are prepared
-func (mm *MenuManager) ResolveNavigation() {
+func (mm *MenuManager) ResolveNavigation() error {
+	if mm.IsResolved {
+		return errors.New("Menus have already been resolved")
+	}
+	return nil
 }
 
-func (mm *MenuManager) Clicked() {
+// Clicked resolves menus that have been clicked
+func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			menu.MouseClick(xPos, yPos, button)
+		}
+	}
 }
 
-func (mm *MenuManager) Toggle() {
+func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			menu.MouseRelease(xPos, yPos, button)
+		}
+	}
+}
+
+func (mm *MenuManager) MouseHover(xPos, yPos float64) {
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			menu.MouseHover(xPos, yPos)
+		}
+	}
+}
+
+func (mm *MenuManager) Draw() bool {
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			return menu.Draw()
+		}
+	}
+	return false
+}
+
+func (mm *MenuManager) Release() {
+	for _, menu := range mm.Menus {
+		menu.Release()
+	}
+}
+
+func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
+	m, err := NewMenu(window, mm.Font, menuDefaults, offsetBy)
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := mm.Menus[name]; ok {
+		return nil, errors.New(fmt.Sprintf("The named menu %s already exists.", name))
+	}
+	mm.Menus[name] = m
+	return m, nil
+}
+
+func (mm *MenuManager) Show(name string) error {
+	m, ok := mm.Menus[name]
+	if !ok {
+		return errors.New(fmt.Sprintf("The named menu '%s' doesn't exists.", name))
+	}
+	m.Show()
+	return nil
+}
+
+// NewMenuManager handles a tree of menus that interact with one another
+func NewMenuManager(font *gltext.Font, startKey glfw.Key) *MenuManager {
+	mm := &MenuManager{Font: font, StartKey: startKey}
+	mm.Menus = make(map[string]*Menu)
+	return mm
 }
 
 /*

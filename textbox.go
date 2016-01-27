@@ -240,9 +240,9 @@ func (textbox *TextBox) makeBufferData() {
 	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
 }
 
-func (textbox *TextBox) SetColor(r, g, b float32) {
-	textbox.Text.SetColor(r, g, b)
-	textbox.Cursor.SetColor(r, g, b)
+func (textbox *TextBox) SetColor(color mgl32.Vec3) {
+	textbox.Text.SetColor(color)
+	textbox.Cursor.SetColor(color)
 }
 
 func (textbox *TextBox) SetString(str string, argv ...interface{}) {

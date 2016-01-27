@@ -20,25 +20,27 @@ func keyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	if mainMenu.Visible && action == glfw.Release {
-		if mods == glfw.ModShift {
-			mainMenu.KeyRelease(key, true)
+	/*
+		if mainMenu.IsVisible && action == glfw.Release {
+			if mods == glfw.ModShift {
+				mainMenu.KeyRelease(key, true)
+			} else {
+				mainMenu.KeyRelease(key, false)
+			}
 		} else {
-			mainMenu.KeyRelease(key, false)
-		}
-	} else {
-		if key == glfw.KeyM && action == glfw.Press {
-			if optionMenu.Visible {
-				optionMenu.Toggle()
+			if key == glfw.KeyM && action == glfw.Press {
+				if optionMenu.IsVisible {
+					optionMenu.Toggle()
+				}
+				mainMenu.Toggle()
 			}
-			mainMenu.Toggle()
-		}
-		if key == glfw.KeyO && action == glfw.Press {
-			if !mainMenu.Visible {
-				optionMenu.Toggle()
+			if key == glfw.KeyO && action == glfw.Press {
+				if !mainMenu.IsVisible {
+					optionMenu.Toggle()
+				}
 			}
 		}
-	}
+	*/
 }
 
 func mouseButtonCallback(
@@ -49,18 +51,15 @@ func mouseButtonCallback(
 ) {
 	xPos, yPos := w.GetCursorPos()
 	if button == glfw.MouseButtonLeft && action == glfw.Press {
-		mainMenu.MouseClick(xPos, yPos, glmenu.MouseLeft)
-		optionMenu.MouseClick(xPos, yPos, glmenu.MouseLeft)
+		menuManager.MouseClick(xPos, yPos, glmenu.MouseLeft)
 	}
 	if button == glfw.MouseButtonLeft && action == glfw.Release {
-		mainMenu.MouseRelease(xPos, yPos, glmenu.MouseLeft)
-		optionMenu.MouseRelease(xPos, yPos, glmenu.MouseLeft)
+		menuManager.MouseRelease(xPos, yPos, glmenu.MouseLeft)
 	}
 }
 
-var mainMenu *glmenu.Menu
-var optionMenu *glmenu.Menu
 var window *glfw.Window
+var menuManager *glmenu.MenuManager
 
 func main() {
 	var err error
@@ -135,18 +134,16 @@ func main() {
 	}
 
 	// load menus
-	mainMenuInit(window, font)
-	optionMenuInit(window, font)
-	mainMenu.Toggle()
+	MenuInit(window, font)
+	menuManager.Show("main")
 
 	gl.ClearColor(0, 0, 0, 0.0)
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		xPos, yPos := window.GetCursorPos()
-		mainMenu.MouseHover(xPos, yPos)
-		optionMenu.MouseHover(xPos, yPos)
-		if mainMenu.Draw() || optionMenu.Draw() {
+		menuManager.MouseHover(xPos, yPos)
+		if menuManager.Draw() {
 			// pause gameplay
 		} else {
 			// do stuff
@@ -154,6 +151,5 @@ func main() {
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
-	mainMenu.Release()
-	optionMenu.Release()
+	menuManager.Release()
 }

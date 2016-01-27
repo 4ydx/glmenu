@@ -8,6 +8,15 @@ import (
 	"math"
 )
 
+type LabelAction int
+
+const (
+	NOOP LabelAction = iota
+	GOTO_MENU
+	EXIT_MENU
+	EXIT_GAME
+)
+
 type Point struct {
 	X, Y float32
 }
@@ -44,13 +53,21 @@ const (
 	MouseCenter
 )
 
+type MenuDefaults struct {
+	TextColor       mgl32.Vec3
+	TextHover       mgl32.Vec3
+	TextClick       mgl32.Vec3
+	BackgroundColor mgl32.Vec4
+}
+
 type Menu struct {
 	//trigger
 	OnShow         func()
 	OnEnterRelease func()
 
 	// options
-	Visible      bool
+	Defaults     MenuDefaults
+	IsVisible    bool
 	ShowOnKey    glfw.Key
 	Height       float32
 	Width        float32
@@ -70,12 +87,8 @@ type Menu struct {
 	// increment during a scale operation
 	TextScaleRate float32
 
-	// set when the menu position on screen is set
-	// after which trying to add anything to the menu will result
-	// in an error
-	isFixed bool
-
 	// opengl oriented
+	Window        *glfw.Window
 	WindowWidth   float32
 	WindowHeight  float32
 	program       uint32 // shader program
@@ -90,18 +103,51 @@ type Menu struct {
 	eboIndexCount int
 }
 
-// NewLabel handles vertical spacing
-func (menu *Menu) NewLabel(str string) *Label {
+// NewLabel handles spacing layout as defined on the menu level
+func (menu *Menu) NewLabel(str string, action LabelAction) *Label {
 	label := &Label{
-		Menu: menu,
-		Text: gltext.NewText(menu.Font, 1.0, 1.1),
+		Action: action,
+		Menu:   menu,
+		Text:   gltext.NewText(menu.Font, 1.0, 1.1),
 	}
 	menu.Labels = append(menu.Labels, label)
 	menu.Formatable = append(menu.Formatable, label)
 
 	label.SetString(str)
 	label.Text.SetScale(1)
+	label.Text.SetColor(menu.Defaults.TextColor)
 
+	label.OnClick = func(xPos, yPos float64, button MouseClick, inBox bool) {
+		label.Text.SetColor(menu.Defaults.TextClick)
+	}
+	label.OnHover = func(xPos, yPos float64, button MouseClick, inBox bool) {
+		if !label.IsClick {
+			label.Text.SetColor(menu.Defaults.TextHover)
+			label.Text.AddScale(menu.TextScaleRate)
+		}
+	}
+	label.OnNotHover = func() {
+		if !label.IsClick {
+			label.Text.SetColor(menu.Defaults.TextColor)
+			label.Text.AddScale(-menu.TextScaleRate)
+		}
+	}
+	switch action {
+	case EXIT_MENU:
+		label.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+			if inBox {
+				menu.Hide()
+			}
+		}
+	case EXIT_GAME:
+		label.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+			if inBox {
+				menu.Window.SetShouldClose(true)
+			}
+		}
+	}
+
+	// reposition all labels/textboxes/etc
 	menu.format()
 	return label
 }
@@ -140,8 +186,9 @@ func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int3
 	textbox := &TextBox{}
 	textbox.Load(menu, width, height, borderWidth)
 	textbox.SetString(str)
+	textbox.SetColor(menu.Defaults.TextColor)
 	textbox.Text.SetScale(1)
-	textbox.Text.SetColor(0, 0, 0)
+
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
 	menu.Formatable = append(menu.Formatable, textbox)
 
@@ -153,7 +200,7 @@ func (menu *Menu) Show() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
 	}
-	menu.Visible = true
+	menu.IsVisible = true
 	if menu.OnShow != nil {
 		menu.OnShow()
 	}
@@ -163,31 +210,36 @@ func (menu *Menu) Hide() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
 	}
-	menu.Visible = false
+	menu.IsVisible = false
 }
 
 func (menu *Menu) Toggle() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
 	}
-	menu.Visible = !menu.Visible
+	menu.IsVisible = !menu.IsVisible
 }
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
-func NewMenu(font *gltext.Font, width float32, height float32, offsetBy mgl32.Vec2) (*Menu, error) {
+func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
 	glfloat_size := 4
 	glint_size := 4
 
+	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
+	// this would probably require some changes though in order to track mouse movement.
+	width, height := window.GetSize()
 	menu := &Menu{
+		Defaults:  defaults,
 		Font:      font,
-		Visible:   false,
+		IsVisible: false,
 		ShowOnKey: glfw.KeyM,
-		Width:     width,
-		Height:    height,
+		Width:     float32(width),
+		Height:    float32(height),
+		Window:    window,
 	}
-
-	// 2DO: make this time dependent rather than fps dependent
-	menu.TextScaleRate = 0.01
+	menu.Background = defaults.BackgroundColor
+	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
+	menu.ResizeWindow(float32(width), float32(height))
 
 	// create shader program and define attributes and uniforms
 	var err error
@@ -300,8 +352,8 @@ func (menu *Menu) Release() {
 }
 
 func (menu *Menu) Draw() bool {
-	if !menu.Visible {
-		return menu.Visible
+	if !menu.IsVisible {
+		return menu.IsVisible
 	}
 	gl.UseProgram(menu.program)
 
@@ -328,11 +380,11 @@ func (menu *Menu) Draw() bool {
 	for i := range menu.TextBoxes {
 		menu.TextBoxes[i].Draw()
 	}
-	return menu.Visible
+	return menu.IsVisible
 }
 
 func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
-	if !menu.Visible {
+	if !menu.IsVisible {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
@@ -345,7 +397,7 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 }
 
 func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
-	if !menu.Visible {
+	if !menu.IsVisible {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
@@ -358,7 +410,7 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 }
 
 func (menu *Menu) MouseHover(xPos, yPos float64) {
-	if !menu.Visible {
+	if !menu.IsVisible {
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos

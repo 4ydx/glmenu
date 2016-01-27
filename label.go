@@ -4,6 +4,11 @@ import (
 	"github.com/4ydx/gltext"
 )
 
+type LabelConfig struct {
+	// clicking this label will navigate to the menu whose name matches Navigate's value
+	Navigate string
+}
+
 type LabelInteraction func(
 	//label *Label,
 	xPos, yPos float64,
@@ -12,6 +17,7 @@ type LabelInteraction func(
 )
 
 type Label struct {
+	Action  LabelAction
 	Menu    *Menu
 	Text    *gltext.Text
 	IsHover bool
@@ -77,6 +83,11 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	X1, X2 := label.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if label.IsClick {
+		if label.IsHover {
+			label.Text.SetColor(label.Menu.Defaults.TextHover)
+		} else {
+			label.Text.SetColor(label.Menu.Defaults.TextColor)
+		}
 		if label.OnRelease != nil {
 			label.OnRelease(xPos, yPos, button, inBox)
 		}
