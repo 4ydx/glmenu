@@ -21,6 +21,23 @@ func (mm *MenuManager) ResolveNavigation() error {
 	if mm.IsResolved {
 		return errors.New("Menus have already been resolved")
 	}
+	for _, menu := range mm.Menus {
+		for _, label := range menu.Labels {
+			if label.Config.Action == GOTO_MENU {
+				gotoMenu, ok := mm.Menus[label.Config.Goto]
+				if ok {
+					func(m *Menu, to *Menu, l *Label) {
+						l.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+							if inBox {
+								m.Hide()
+								to.Show()
+							}
+						}
+					}(menu, gotoMenu, label)
+				}
+			}
+		}
+	}
 	return nil
 }
 

@@ -4,9 +4,18 @@ import (
 	"github.com/4ydx/gltext"
 )
 
+type LabelAction int
+
+const (
+	NOOP LabelAction = iota
+	GOTO_MENU
+	EXIT_MENU
+	EXIT_GAME
+)
+
 type LabelConfig struct {
-	// clicking this label will navigate to the menu whose name matches Navigate's value
-	Navigate string
+	Action LabelAction
+	Goto   string
 }
 
 type LabelInteraction func(
@@ -17,7 +26,7 @@ type LabelInteraction func(
 )
 
 type Label struct {
-	Action  LabelAction
+	Config  LabelConfig
 	Menu    *Menu
 	Text    *gltext.Text
 	IsHover bool

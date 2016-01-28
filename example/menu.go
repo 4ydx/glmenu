@@ -27,9 +27,10 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	}
 	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox.Text.MaxRuneCount = 16
-	label := mainMenu.NewLabel("Options", glmenu.NOOP)
-	mainMenu.NewLabel("Quit", glmenu.EXIT_GAME)
-	mainMenu.NewLabel("Dummy", glmenu.NOOP)
+
+	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
+	mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
+	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
 
 	// menu 2
 	optionMenu, err := menuManager.NewMenu(window, "option", glmenu.MenuDefaults{BackgroundColor: mgl32.Vec4{1, 1, 1, 1}}, mgl32.Vec2{})
@@ -37,13 +38,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		fmt.Println("error loading font")
 		os.Exit(1)
 	}
-	optionMenu.NewLabel("Back", glmenu.NOOP)
+	optionMenu.NewLabel("Back", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "main"})
 
-	// navigation
-	label.OnRelease = func(xPos, yPos float64, button glmenu.MouseClick, inBox bool) {
-		if inBox {
-			mainMenu.Hide()
-			optionMenu.Show()
-		}
-	}
+	menuManager.ResolveNavigation()
 }

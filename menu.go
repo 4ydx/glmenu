@@ -8,15 +8,6 @@ import (
 	"math"
 )
 
-type LabelAction int
-
-const (
-	NOOP LabelAction = iota
-	GOTO_MENU
-	EXIT_MENU
-	EXIT_GAME
-)
-
 type Point struct {
 	X, Y float32
 }
@@ -104,9 +95,9 @@ type Menu struct {
 }
 
 // NewLabel handles spacing layout as defined on the menu level
-func (menu *Menu) NewLabel(str string, action LabelAction) *Label {
+func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label := &Label{
-		Action: action,
+		Config: config,
 		Menu:   menu,
 		Text:   gltext.NewText(menu.Font, 1.0, 1.1),
 	}
@@ -132,7 +123,7 @@ func (menu *Menu) NewLabel(str string, action LabelAction) *Label {
 			label.Text.AddScale(-menu.TextScaleRate)
 		}
 	}
-	switch action {
+	switch config.Action {
 	case EXIT_MENU:
 		label.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 			if inBox {
