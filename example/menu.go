@@ -33,8 +33,6 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
 	mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
-	/*
-	 */
 
 	// menu 2
 	optionMenu, err := menuManager.NewMenu(window, "option", glmenu.MenuDefaults{BackgroundColor: mgl32.Vec4{0, 1, 1, 1}, Dimensions: mgl32.Vec2{200, 200}}, mgl32.Vec2{})

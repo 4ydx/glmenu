@@ -1,7 +1,6 @@
 package glmenu
 
 import (
-	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -171,7 +170,6 @@ func (menu *Menu) format() {
 	hTotal, wMax := float32(0), float32(0)
 	length := len(menu.Formatable)
 	for _, l := range menu.Formatable {
-		fmt.Printf("formattable h %f w %f\n", l.Height(), l.Width())
 		if l.Height() > height {
 			height = l.Height()
 		}
@@ -203,15 +201,12 @@ func (menu *Menu) format() {
 		}
 	}
 
-	fmt.Printf("B4 Menu h %f w %f\n", menu.Height, menu.Width)
 	if menu.Height < hTotal+menu.Defaults.Border {
 		menu.Height = hTotal + menu.Defaults.Border
 	}
 	if menu.Width < wMax+menu.Defaults.Border {
 		menu.Width = wMax + menu.Defaults.Border
 	}
-	fmt.Printf("Max h %f w %f\n", hTotal, wMax)
-	fmt.Printf("Menu h %f w %f\n", menu.Height, menu.Width)
 }
 
 // NewTextBox handles vertical spacing
