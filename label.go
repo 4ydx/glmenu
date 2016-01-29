@@ -125,3 +125,7 @@ func (label *Label) SetPosition(x, y float32) {
 func (label *Label) Height() float32 {
 	return label.Text.Height()
 }
+
+func (label *Label) Width() float32 {
+	return label.Text.Width()
+}

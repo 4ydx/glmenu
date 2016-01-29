@@ -17,6 +17,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		TextClick:       mgl32.Vec3{250.0 / 255.0, 0, 154.0 / 255.0},
 		TextHover:       mgl32.Vec3{0, 250.0 / 255.0, 154.0 / 255.0},
 		BackgroundColor: mgl32.Vec4{0.5, 0.5, 0.5, 1.0},
+		Dimensions:      mgl32.Vec2{100, 100},
 	}
 
 	// menu 1
@@ -33,12 +34,13 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
 
 	// menu 2
-	optionMenu, err := menuManager.NewMenu(window, "option", glmenu.MenuDefaults{BackgroundColor: mgl32.Vec4{1, 1, 1, 1}}, mgl32.Vec2{})
+	optionMenu, err := menuManager.NewMenu(window, "option", glmenu.MenuDefaults{BackgroundColor: mgl32.Vec4{0, 1, 1, 1}, Dimensions: mgl32.Vec2{200, 200}}, mgl32.Vec2{})
 	if err != nil {
 		fmt.Println("error loading font")
 		os.Exit(1)
 	}
 	optionMenu.NewLabel("Back", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "main"})
 
-	menuManager.ResolveNavigation()
+	// complete setup
+	menuManager.Finalize()
 }

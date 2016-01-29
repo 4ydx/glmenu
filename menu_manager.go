@@ -15,13 +15,14 @@ type MenuManager struct {
 	IsResolved bool
 }
 
-// ResolveNavigation connects menus together
+// Finalize connects menus together and performs final formatting steps
 // this must be run after all menus are prepared
-func (mm *MenuManager) ResolveNavigation() error {
+func (mm *MenuManager) Finalize() error {
 	if mm.IsResolved {
 		return errors.New("Menus have already been resolved")
 	}
 	for _, menu := range mm.Menus {
+		menu.Finalize()
 		for _, label := range menu.Labels {
 			if label.Config.Action == GOTO_MENU {
 				gotoMenu, ok := mm.Menus[label.Config.Goto]

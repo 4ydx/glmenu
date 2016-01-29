@@ -7,4 +7,5 @@ type Border struct {
 type Formatable interface {
 	SetPosition(x, y float32)
 	Height() float32
+	Width() float32
 }

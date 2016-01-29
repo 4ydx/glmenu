@@ -49,6 +49,7 @@ type MenuDefaults struct {
 	TextHover       mgl32.Vec3
 	TextClick       mgl32.Vec3
 	BackgroundColor mgl32.Vec4
+	Dimensions      mgl32.Vec2
 }
 
 type Menu struct {
@@ -79,6 +80,7 @@ type Menu struct {
 	TextScaleRate float32
 
 	// opengl oriented
+	Offset        mgl32.Vec2
 	Window        *glfw.Window
 	WindowWidth   float32
 	WindowHeight  float32
@@ -92,6 +94,29 @@ type Menu struct {
 	vboIndexCount int
 	eboData       []int32
 	eboIndexCount int
+}
+
+func (menu *Menu) Finalize() {
+	glfloat_size := 4
+	glint_size := 4
+
+	menu.format()
+	menu.lowerLeft = menu.findCenter(menu.Offset)
+	menu.makeBufferData()
+
+	// setup context
+	gl.BindVertexArray(menu.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
+	gl.BufferData(
+		gl.ARRAY_BUFFER, glfloat_size*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, menu.ebo)
+	gl.BufferData(
+		gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
+	gl.BindVertexArray(0)
+
+	// not necesssary, but i just want to better understand using vertex arrays
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 }
 
 // NewLabel handles spacing layout as defined on the menu level
@@ -137,39 +162,44 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 			}
 		}
 	}
-
-	// reposition all labels/textboxes/etc
-	menu.format()
 	return label
 }
 
 func (menu *Menu) format() {
+	height, width := float32(0), float32(0)
+	hTotal, wTotal := float32(0), float32(0)
 	length := len(menu.Formatable)
-	if length == 1 {
-		return
-	}
-	height := float32(0)
 	for _, l := range menu.Formatable {
 		if l.Height() > height {
 			height = l.Height()
 		}
+		if l.Width() > width {
+			width = l.Width()
+		}
+		hTotal += l.Height()
+		wTotal += l.Width()
 	}
+
 	// not easily understood perhaps - formatting these things never is!
 	// depending on the number of menu elements a vertically centered menus formatting will differ
+	// - the middle object in a menu with an odd number of objects has value 0 = middleIndex-float32(i)
+	//   or, in the case of even values, the two middle values are just around the center
 	middleIndex := float32(math.Floor(float64(length / 2)))
-	verticalOffset := height + menu.LabelBorder.Y*2
+	vertical := height + menu.LabelBorder.Y*2
 	switch length % 2 {
 	case 0:
 		for i, l := range menu.Formatable {
-			offset := (middleIndex-float32(i)-1)*verticalOffset + verticalOffset/2
+			offset := (middleIndex-float32(i)-1)*vertical + vertical/2
 			l.SetPosition(0, offset)
 		}
 	case 1:
 		for i, l := range menu.Formatable {
-			offset := (middleIndex - float32(i)) * verticalOffset
+			offset := (middleIndex - float32(i)) * vertical
 			l.SetPosition(0, offset)
 		}
 	}
+	// 2do: get total height... and width. make sure that the background is at least large enough to cover this area...
+	// 2do: repositioning the menu in different places on the screen
 }
 
 // NewTextBox handles vertical spacing
@@ -182,8 +212,6 @@ func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int3
 
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
 	menu.Formatable = append(menu.Formatable, textbox)
-
-	menu.format()
 	return textbox
 }
 
@@ -213,8 +241,8 @@ func (menu *Menu) Toggle() {
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
 func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
-	glfloat_size := 4
-	glint_size := 4
+	//glfloat_size := 4
+	//glint_size := 4
 
 	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
 	// this would probably require some changes though in order to track mouse movement.
@@ -224,9 +252,10 @@ func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offs
 		Font:      font,
 		IsVisible: false,
 		ShowOnKey: glfw.KeyM,
-		Width:     float32(width),
-		Height:    float32(height),
+		Width:     defaults.Dimensions.X(),
+		Height:    defaults.Dimensions.Y(),
 		Window:    window,
+		Offset:    offsetBy,
 	}
 	menu.Background = defaults.BackgroundColor
 	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
@@ -280,22 +309,26 @@ func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offs
 	menu.eboIndexCount = 6     // 6 triangle indices for a quad
 	menu.vboData = make([]float32, menu.vboIndexCount, menu.vboIndexCount)
 	menu.eboData = make([]int32, menu.eboIndexCount, menu.eboIndexCount)
-	menu.lowerLeft = menu.findCenter(offsetBy)
-	menu.makeBufferData()
 
-	// setup context
-	gl.BindVertexArray(menu.vao)
-	gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
-	gl.BufferData(
-		gl.ARRAY_BUFFER, glfloat_size*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, menu.ebo)
-	gl.BufferData(
-		gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
-	gl.BindVertexArray(0)
+	/*
+		// positioning and dimensions
+		menu.lowerLeft = menu.findCenter(offsetBy)
+		menu.makeBufferData()
 
-	// not necesssary, but i just want to better understand using vertex arrays
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+		// setup context
+		gl.BindVertexArray(menu.vao)
+		gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
+		gl.BufferData(
+			gl.ARRAY_BUFFER, glfloat_size*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, menu.ebo)
+		gl.BufferData(
+			gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
+		gl.BindVertexArray(0)
+
+		// not necesssary, but i just want to better understand using vertex arrays
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+	*/
 	return menu, nil
 }
 
