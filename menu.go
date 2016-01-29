@@ -1,6 +1,7 @@
 package glmenu
 
 import (
+	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -50,6 +51,7 @@ type MenuDefaults struct {
 	TextClick       mgl32.Vec3
 	BackgroundColor mgl32.Vec4
 	Dimensions      mgl32.Vec2
+	Border          float32
 }
 
 type Menu struct {
@@ -104,7 +106,7 @@ func (menu *Menu) Finalize() {
 	menu.lowerLeft = menu.findCenter(menu.Offset)
 	menu.makeBufferData()
 
-	// setup context
+	// bind data
 	gl.BindVertexArray(menu.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
 	gl.BufferData(
@@ -113,8 +115,6 @@ func (menu *Menu) Finalize() {
 	gl.BufferData(
 		gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
 	gl.BindVertexArray(0)
-
-	// not necesssary, but i just want to better understand using vertex arrays
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 }
@@ -165,20 +165,24 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	return label
 }
 
+// format 2do: repositioning the menu in different places on the screen
 func (menu *Menu) format() {
 	height, width := float32(0), float32(0)
-	hTotal, wTotal := float32(0), float32(0)
+	hTotal, wMax := float32(0), float32(0)
 	length := len(menu.Formatable)
 	for _, l := range menu.Formatable {
+		fmt.Printf("formattable h %f w %f\n", l.Height(), l.Width())
 		if l.Height() > height {
 			height = l.Height()
 		}
 		if l.Width() > width {
 			width = l.Width()
 		}
-		hTotal += l.Height()
-		wTotal += l.Width()
+		if l.Width() > wMax {
+			wMax = l.Width() + menu.LabelBorder.Y*2
+		}
 	}
+	hTotal = height*float32(length) + menu.LabelBorder.Y*2
 
 	// not easily understood perhaps - formatting these things never is!
 	// depending on the number of menu elements a vertically centered menus formatting will differ
@@ -198,8 +202,16 @@ func (menu *Menu) format() {
 			l.SetPosition(0, offset)
 		}
 	}
-	// 2do: get total height... and width. make sure that the background is at least large enough to cover this area...
-	// 2do: repositioning the menu in different places on the screen
+
+	fmt.Printf("B4 Menu h %f w %f\n", menu.Height, menu.Width)
+	if menu.Height < hTotal+menu.Defaults.Border {
+		menu.Height = hTotal + menu.Defaults.Border
+	}
+	if menu.Width < wMax+menu.Defaults.Border {
+		menu.Width = wMax + menu.Defaults.Border
+	}
+	fmt.Printf("Max h %f w %f\n", hTotal, wMax)
+	fmt.Printf("Menu h %f w %f\n", menu.Height, menu.Width)
 }
 
 // NewTextBox handles vertical spacing
@@ -241,9 +253,6 @@ func (menu *Menu) Toggle() {
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
 func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
-	//glfloat_size := 4
-	//glint_size := 4
-
 	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
 	// this would probably require some changes though in order to track mouse movement.
 	width, height := window.GetSize()
@@ -310,25 +319,7 @@ func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offs
 	menu.vboData = make([]float32, menu.vboIndexCount, menu.vboIndexCount)
 	menu.eboData = make([]int32, menu.eboIndexCount, menu.eboIndexCount)
 
-	/*
-		// positioning and dimensions
-		menu.lowerLeft = menu.findCenter(offsetBy)
-		menu.makeBufferData()
-
-		// setup context
-		gl.BindVertexArray(menu.vao)
-		gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
-		gl.BufferData(
-			gl.ARRAY_BUFFER, glfloat_size*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, menu.ebo)
-		gl.BufferData(
-			gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
-		gl.BindVertexArray(0)
-
-		// not necesssary, but i just want to better understand using vertex arrays
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-	*/
+	// binding of the data now in the Finalize method
 	return menu, nil
 }
 
