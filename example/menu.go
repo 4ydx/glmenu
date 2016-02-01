@@ -30,8 +30,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 
 	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox.Text.MaxRuneCount = 16
-	label := mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
-	label.SetPosition(mgl32.Vec2{100, 0})
+	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
 	mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
 

@@ -130,6 +130,7 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 
 	label.SetString(str)
 	label.Text.SetScale(1)
+	label.Text.SetPosition(menu.Offset)
 	label.Text.SetColor(menu.Defaults.TextColor)
 
 	label.OnClick = func(xPos, yPos float64, button MouseClick, inBox bool) {
@@ -216,6 +217,7 @@ func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int3
 	textbox.SetString(str)
 	textbox.SetColor(menu.Defaults.TextColor)
 	textbox.Text.SetScale(1)
+	textbox.Text.SetPosition(menu.Offset)
 
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
 	menu.Formatable = append(menu.Formatable, textbox)
