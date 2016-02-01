@@ -22,7 +22,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	}
 
 	// menu 1
-	mainMenu, err := menuManager.NewMenu(window, "main", defaults, mgl32.Vec2{})
+	mainMenu, err := menuManager.NewMenu(window, "main", defaults, mgl32.Vec2{100, 0})
 	if err != nil {
 		fmt.Println("error loading the font")
 		os.Exit(1)
@@ -30,7 +30,8 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 
 	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox.Text.MaxRuneCount = 16
-	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
+	label := mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
+	label.SetPosition(mgl32.Vec2{100, 0})
 	mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
 

@@ -2,6 +2,7 @@ package glmenu
 
 import (
 	"github.com/4ydx/gltext"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 type LabelAction int
@@ -41,6 +42,10 @@ type Label struct {
 
 func (label *Label) Reset() {
 	label.Text.SetScale(label.Text.ScaleMin)
+}
+
+func (label *Label) GetPosition() mgl32.Vec2 {
+	return label.Text.Position
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {
@@ -118,8 +123,8 @@ func (label *Label) Draw() {
 	label.Text.Draw()
 }
 
-func (label *Label) SetPosition(x, y float32) {
-	label.Text.SetPosition(x, y)
+func (label *Label) SetPosition(v mgl32.Vec2) {
+	label.Text.SetPosition(v)
 }
 
 func (label *Label) Height() float32 {

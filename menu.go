@@ -192,12 +192,12 @@ func (menu *Menu) format() {
 	case 0:
 		for i, l := range menu.Formatable {
 			offset := (middleIndex-float32(i)-1)*vertical + vertical/2
-			l.SetPosition(0, offset)
+			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
 		}
 	case 1:
 		for i, l := range menu.Formatable {
 			offset := (middleIndex - float32(i)) * vertical
-			l.SetPosition(0, offset)
+			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
 		}
 	}
 

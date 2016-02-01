@@ -39,6 +39,7 @@ func (mm *MenuManager) Finalize() error {
 			}
 		}
 	}
+	mm.IsResolved = true
 	return nil
 }
 

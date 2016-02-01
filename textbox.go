@@ -83,8 +83,7 @@ type TextBox struct {
 	height      float32
 	width       float32
 
-	SetPositionX float32
-	SetPositionY float32
+	Position mgl32.Vec2
 }
 
 func (textbox *TextBox) Height() float32 {
@@ -93,6 +92,10 @@ func (textbox *TextBox) Height() float32 {
 
 func (textbox *TextBox) Width() float32 {
 	return textbox.width
+}
+
+func (textbox *TextBox) GetPosition() mgl32.Vec2 {
+	return textbox.Text.Position
 }
 
 func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int32) (err error) {
@@ -322,27 +325,30 @@ func (textbox *TextBox) Edit(key glfw.Key, withShift bool) {
 				index += 1
 				textbox.CursorIndex = index
 				textbox.Text.SetString(string(r))
-				textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
-				textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
+				textbox.Text.SetPosition(textbox.Text.Position)
+				textbox.Cursor.SetPosition(
+					mgl32.Vec2{
+						textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
+						textbox.Text.Position.Y(),
+					})
 			}
 		}
 	}
 }
 
-func (textbox *TextBox) SetPosition(x, y float32) {
+func (textbox *TextBox) SetPosition(v mgl32.Vec2) {
 	// transform to orthographic coordinates ranged -1 to 1 for the shader
-	textbox.finalPosition[0] = x / (textbox.Menu.Font.WindowWidth / 2)
-	textbox.finalPosition[1] = y / (textbox.Menu.Font.WindowHeight / 2)
+	textbox.finalPosition[0] = v.X() / (textbox.Menu.Font.WindowWidth / 2)
+	textbox.finalPosition[1] = v.Y() / (textbox.Menu.Font.WindowHeight / 2)
 
 	// used to build shadow data and for calling SetPosition again when needed
-	textbox.SetPositionX = x
-	textbox.SetPositionY = y
-	textbox.Text.SetPosition(x, y)
-	textbox.Cursor.SetPosition(x, y)
+	textbox.Position = v
+	textbox.Text.SetPosition(v)
+	textbox.Cursor.SetPosition(v)
 }
 
 func (textbox *TextBox) GetBoundingBox() (X1, X2 Point) {
-	x, y := textbox.SetPositionX, textbox.SetPositionY
+	x, y := textbox.Position.X(), textbox.Position.Y()
 	X1.X = textbox.X1.X + x
 	X1.Y = textbox.X1.Y + y
 	X2.X = textbox.X2.X + x
@@ -361,8 +367,12 @@ func (textbox *TextBox) Backspace() {
 		index -= 1
 		textbox.CursorIndex = index
 		textbox.Text.SetString(string(r))
-		textbox.Text.SetPosition(textbox.Text.SetPositionX, textbox.Text.SetPositionY)
-		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
+		textbox.Text.SetPosition(textbox.Text.Position)
+		textbox.Cursor.SetPosition(
+			mgl32.Vec2{
+				textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
+				textbox.Text.Position.Y(),
+			})
 	}
 }
 
@@ -391,7 +401,11 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 		textbox.CursorIndex = index
 		textbox.Cursor.RuneCount = 1
 		textbox.Time = time.Now()
-		textbox.Cursor.SetPosition(textbox.Text.SetPositionX+float32(textbox.Text.CharPosition(index)), textbox.Text.SetPositionY)
+		textbox.Cursor.SetPosition(
+			mgl32.Vec2{
+				textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
+				textbox.Text.Position.Y(),
+			})
 		textbox.IsClick = true
 		if textbox.OnClick != nil {
 			textbox.OnClick(textbox, xPos, yPos, button, inBox)
