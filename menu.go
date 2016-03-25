@@ -5,6 +5,7 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/go-gl/mathgl/mgl32"
+	"image"
 	"math"
 )
 
@@ -118,6 +119,67 @@ func (menu *Menu) Finalize() {
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 }
 
+// NewMenuTexture accepts an image location and the internal dimensions of the smaller images embedded within
+// the texture.  The image will be subdivided into evenly spaced rectangles based on the dimensions given.
+// This is very beta.
+func (menu *Menu) NewMenuTexture(imagePath string, dimensions mgl32.Vec2) (mt *MenuTexture, err error) {
+	width, height := menu.Window.GetSize()
+	mt = &MenuTexture{
+		Menu:         menu,
+		WindowWidth:  float32(width),
+		WindowHeight: float32(height),
+		Dimensions:   dimensions,
+	}
+	mt.ResizeWindow(float32(width), float32(height))
+
+	mt.Image, err = gltext.LoadImage(imagePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Resize menuTexture to next power-of-two.
+	mt.Image = gltext.Pow2Image(mt.Image).(*image.NRGBA)
+	ib := mt.Image.Bounds()
+
+	mt.textureWidth = float32(ib.Dx())
+	mt.textureHeight = float32(ib.Dy())
+
+	// generate texture
+	gl.GenTextures(1, &mt.textureID)
+	gl.BindTexture(gl.TEXTURE_2D, mt.textureID)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(ib.Dx()),
+		int32(ib.Dy()),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(mt.Image.Pix),
+	)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+
+	// create shader program and define attributes and uniforms
+	mt.program, err = gltext.NewProgram(menuTextureVertexShaderSource, menuTextureFragmentShaderSource)
+	if err != nil {
+		return mt, err
+	}
+
+	// attributes
+	mt.centeredPositionAttribute = uint32(gl.GetAttribLocation(mt.program, gl.Str("centered_position\x00")))
+	mt.uvAttribute = uint32(gl.GetAttribLocation(mt.program, gl.Str("uv\x00")))
+
+	// uniforms
+	mt.finalPositionUniform = gl.GetUniformLocation(mt.program, gl.Str("final_position\x00"))
+	mt.orthographicMatrixUniform = gl.GetUniformLocation(mt.program, gl.Str("orthographic_matrix\x00"))
+	mt.fragmentTextureUniform = gl.GetUniformLocation(mt.program, gl.Str("fragment_texture\x00"))
+
+	return mt, nil
+}
+
 // NewLabel handles spacing layout as defined on the menu level
 func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label := &Label{
@@ -150,17 +212,19 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	}
 	switch config.Action {
 	case EXIT_MENU:
-		label.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 			if inBox {
 				menu.Hide()
 			}
 		}
 	case EXIT_GAME:
-		label.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 			if inBox {
 				menu.Window.SetShouldClose(true)
 			}
 		}
+	default:
+		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {}
 	}
 	return label
 }

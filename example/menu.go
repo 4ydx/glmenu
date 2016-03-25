@@ -27,6 +27,8 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		fmt.Println("error loading the font")
 		os.Exit(1)
 	}
+	// 9 different embedded images within image.jpg with indices 0 - 8 running from upper left to lower right
+	mainMenu.NewMenuTexture("texture/image.jpg", mgl32.Vec2{3, 3})
 
 	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox.Text.MaxRuneCount = 16

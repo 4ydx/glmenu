@@ -43,6 +43,15 @@ func (mm *MenuManager) Finalize() error {
 	return nil
 }
 
+func (mm *MenuManager) IsVisible() bool {
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			return true
+		}
+	}
+	return false
+}
+
 // Clicked resolves menus that have been clicked
 func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
 	for _, menu := range mm.Menus {

@@ -20,7 +20,6 @@ type LabelConfig struct {
 }
 
 type LabelInteraction func(
-	//label *Label,
 	xPos, yPos float64,
 	button MouseClick,
 	isInBoundingBox bool,
@@ -33,8 +32,10 @@ type Label struct {
 	IsHover bool
 	IsClick bool
 
-	// defaults exist but can be user defined
+	// public methods are expected to be defined by the user and run before the private method are called
+	// if a public method is undefined, it is skipped.  Currently I have only defined onRelease as private.
 	OnClick    LabelInteraction
+	onRelease  LabelInteraction
 	OnRelease  LabelInteraction
 	OnHover    LabelInteraction
 	OnNotHover func()
@@ -105,6 +106,7 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 		if label.OnRelease != nil {
 			label.OnRelease(xPos, yPos, button, inBox)
 		}
+		label.onRelease(xPos, yPos, button, inBox)
 	}
 	label.IsClick = false
 }
