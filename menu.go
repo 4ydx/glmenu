@@ -195,6 +195,11 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label.Text.SetPosition(menu.Offset)
 	label.Text.SetColor(menu.Defaults.TextColor)
 
+	if config.Action == NOOP {
+		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {}
+		return label
+	}
+
 	label.OnClick = func(xPos, yPos float64, button MouseClick, inBox bool) {
 		label.Text.SetColor(menu.Defaults.TextClick)
 	}
