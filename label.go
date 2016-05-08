@@ -38,7 +38,6 @@ type Label struct {
 	onRelease  LabelInteraction
 	OnRelease  LabelInteraction
 	OnHover    LabelInteraction
-	OnDisplay  func() // typically used by something like a "loading screen"
 	OnNotHover func()
 }
 
