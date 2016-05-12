@@ -10,7 +10,8 @@ import (
 
 type MenuManager struct {
 	Font       *gltext.Font
-	StartKey   glfw.Key
+	StartKey   glfw.Key // they key that, when pressed, will display the StartMenu
+	StartMenu  string   // the name passed to each NewMenu call
 	Menus      map[string]*Menu
 	IsResolved bool
 }
@@ -114,8 +115,8 @@ func (mm *MenuManager) Show(name string) error {
 }
 
 // NewMenuManager handles a tree of menus that interact with one another
-func NewMenuManager(font *gltext.Font, startKey glfw.Key) *MenuManager {
-	mm := &MenuManager{Font: font, StartKey: startKey}
+func NewMenuManager(font *gltext.Font, startKey glfw.Key, startMenu string) *MenuManager {
+	mm := &MenuManager{Font: font, StartKey: startKey, StartMenu: startMenu}
 	mm.Menus = make(map[string]*Menu)
 	return mm
 }

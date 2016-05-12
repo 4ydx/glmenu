@@ -10,7 +10,7 @@ import (
 )
 
 func MenuInit(window *glfw.Window, font *gltext.Font) {
-	menuManager = glmenu.NewMenuManager(font, glfw.KeyM)
+	menuManager = glmenu.NewMenuManager(font, glfw.KeyM, "main")
 
 	defaults := glmenu.MenuDefaults{
 		TextColor:       mgl32.Vec3{1, 1, 1},
