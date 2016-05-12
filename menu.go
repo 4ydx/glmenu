@@ -72,11 +72,11 @@ type Menu struct {
 	Background        mgl32.Vec4
 
 	// interactive objects
-	Font        *gltext.Font
-	Labels      []*Label
-	LabelBorder Border
-	TextBoxes   []*TextBox
-	Formatable  []Formatable
+	Font   *gltext.Font
+	Labels []*Label
+	//LabelBorder Border
+	TextBoxes  []*TextBox
+	Formatable []Formatable
 
 	// increment during a scale operation
 	TextScaleRate float32
@@ -234,8 +234,8 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	return label
 }
 
-// format 2do: repositioning the menu in different places on the screen
 func (menu *Menu) format() {
+	var borders float32
 	height, width := float32(0), float32(0)
 	hTotal, wMax := float32(0), float32(0)
 	length := len(menu.Formatable)
@@ -247,25 +247,27 @@ func (menu *Menu) format() {
 			width = l.Width()
 		}
 		if l.Width() > wMax {
-			wMax = l.Width() + menu.LabelBorder.Y*2
+			wMax = l.Width() + l.GetBorder().Y*2
 		}
+		borders += l.GetBorder().Y * 2
 	}
-	hTotal = height*float32(length) + menu.LabelBorder.Y*2
+	hTotal = height*float32(length) + borders
 
 	// not easily understood perhaps - formatting these things never is!
 	// depending on the number of menu elements a vertically centered menus formatting will differ
 	// - the middle object in a menu with an odd number of objects has value 0 = middleIndex-float32(i)
 	//   or, in the case of even values, the two middle values are just around the center
 	middleIndex := float32(math.Floor(float64(length / 2)))
-	vertical := height + menu.LabelBorder.Y*2
 	switch length % 2 {
 	case 0:
 		for i, l := range menu.Formatable {
+			vertical := height + l.GetBorder().Y*2
 			offset := (middleIndex-float32(i)-1)*vertical + vertical/2
 			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
 		}
 	case 1:
 		for i, l := range menu.Formatable {
+			vertical := height + l.GetBorder().Y*2
 			offset := (middleIndex - float32(i)) * vertical
 			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
 		}

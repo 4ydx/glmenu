@@ -15,6 +15,7 @@ const (
 )
 
 type LabelConfig struct {
+	Border Border
 	Action LabelAction
 	Goto   string
 }
@@ -47,6 +48,10 @@ func (label *Label) Reset() {
 
 func (label *Label) GetPosition() mgl32.Vec2 {
 	return label.Text.Position
+}
+
+func (label *Label) GetBorder() Border {
+	return label.Config.Border
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {

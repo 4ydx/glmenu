@@ -98,6 +98,10 @@ func (textbox *TextBox) GetPosition() mgl32.Vec2 {
 	return textbox.Text.Position
 }
 
+func (textbox *TextBox) GetBorder() Border {
+	return Border{}
+}
+
 func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int32) (err error) {
 	textbox.Menu = menu
 
