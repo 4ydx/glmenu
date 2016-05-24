@@ -123,6 +123,19 @@ func (mm *MenuManager) Toggle(name string) error {
 	return nil
 }
 
+func (mm *MenuManager) SetText(name string, index int, text string) error {
+	m, ok := mm.Menus[name]
+	if !ok {
+		return errors.New(fmt.Sprintf("The named menu '%s' doesn't exists.", name))
+	}
+	for i, l := range m.Labels {
+		if i == index {
+			l.Text.SetString(text)
+		}
+	}
+	return nil
+}
+
 // NewMenuManager handles a tree of menus that interact with one another
 func NewMenuManager(font *gltext.Font, startKey glfw.Key, startMenu string) *MenuManager {
 	mm := &MenuManager{Font: font, StartKey: startKey, StartMenu: startMenu}
