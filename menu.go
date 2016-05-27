@@ -57,6 +57,7 @@ type MenuDefaults struct {
 type Menu struct {
 	//trigger
 	OnShow         func()
+	OnComplete     func()
 	OnEnterRelease func()
 
 	// options

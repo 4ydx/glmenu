@@ -81,6 +81,9 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 func (mm *MenuManager) Draw() bool {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
+			if menu.OnComplete != nil {
+				menu.OnComplete()
+			}
 			return menu.Draw()
 		}
 	}
