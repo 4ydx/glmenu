@@ -400,13 +400,13 @@ func (textbox *TextBox) ImmediateCursorDraw() {
 }
 
 func (textbox *TextBox) MoveCursor(offset int) {
-	if textbox.CursorIndex >= 0 && (textbox.CursorIndex <= textbox.Text.MaxRuneCount || textbox.Text.RuneCount == 0) {
+	if textbox.CursorIndex >= 0 && (textbox.CursorIndex <= len(textbox.Text.String)) {
 		textbox.CursorIndex += offset
 		if textbox.CursorIndex < 0 {
 			textbox.CursorIndex = 0
 		}
-		if textbox.Text.MaxRuneCount > 0 && textbox.CursorIndex > textbox.Text.MaxRuneCount {
-			textbox.CursorIndex = textbox.Text.MaxRuneCount
+		if textbox.CursorIndex > len(textbox.Text.String) {
+			textbox.CursorIndex = len(textbox.Text.String)
 		}
 		textbox.Cursor.SetPosition(
 			mgl32.Vec2{
