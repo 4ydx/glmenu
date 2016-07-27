@@ -78,6 +78,12 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	}
 }
 
+func (mm *MenuManager) KeyRelease(key glfw.Key, withShift bool) {
+	for _, menu := range mm.Menus {
+		menu.KeyRelease(key, withShift)
+	}
+}
+
 func (mm *MenuManager) Draw() bool {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {

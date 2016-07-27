@@ -20,27 +20,13 @@ func keyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	/*
-		if mainMenu.IsVisible && action == glfw.Release {
-			if mods == glfw.ModShift {
-				mainMenu.KeyRelease(key, true)
-			} else {
-				mainMenu.KeyRelease(key, false)
-			}
+	if action != glfw.Release {
+		if mods == glfw.ModShift {
+			menuManager.KeyRelease(key, true)
 		} else {
-			if key == glfw.KeyM && action == glfw.Press {
-				if optionMenu.IsVisible {
-					optionMenu.Toggle()
-				}
-				mainMenu.Toggle()
-			}
-			if key == glfw.KeyO && action == glfw.Press {
-				if !mainMenu.IsVisible {
-					optionMenu.Toggle()
-				}
-			}
+			menuManager.KeyRelease(key, false)
 		}
-	*/
+	}
 }
 
 func mouseButtonCallback(
