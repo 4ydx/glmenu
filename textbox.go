@@ -366,7 +366,7 @@ func (textbox *TextBox) GetBoundingBox() (X1, X2 Point) {
 
 func (textbox *TextBox) Backspace() {
 	index := textbox.CursorIndex
-	if len(textbox.Text.String) > 0 && index > 0 {
+	if len(textbox.Text.String) > 0 {
 		r := make([]rune, len(textbox.Text.String)-1)
 		copy(r, []rune(textbox.Text.String[0:index-1]))
 		copy(r[index-1:], []rune(textbox.Text.String[index:]))
@@ -427,6 +427,10 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.Offset[0]))
 		if side == gltext.CSRight {
 			index++
+		}
+		// empty string
+		if side == gltext.CSUnknown {
+			index = 0
 		}
 		textbox.CursorIndex = index
 		textbox.ImmediateCursorDraw()

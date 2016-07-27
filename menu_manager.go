@@ -29,7 +29,7 @@ func (mm *MenuManager) Finalize() error {
 				gotoMenu, ok := mm.Menus[label.Config.Goto]
 				if ok {
 					func(m *Menu, to *Menu, l *Label) {
-						l.OnRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
+						l.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 							if inBox {
 								m.Hide()
 								to.Show()
