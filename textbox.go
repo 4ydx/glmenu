@@ -298,6 +298,10 @@ func (textbox *TextBox) KeyRelease(key glfw.Key, withShift bool) {
 			textbox.Backspace()
 		case glfw.KeyEscape:
 			textbox.IsEdit = false
+		case glfw.KeyLeft:
+			textbox.MoveCursor(-1)
+		case glfw.KeyRight:
+			textbox.MoveCursor(+1)
 		default:
 			textbox.Edit(key, withShift)
 		}
@@ -390,6 +394,29 @@ func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
+func (textbox *TextBox) ImmediateCursorDraw() {
+	textbox.Cursor.RuneCount = 1
+	textbox.Time = time.Now()
+}
+
+func (textbox *TextBox) MoveCursor(offset int) {
+	if textbox.CursorIndex >= 0 && (textbox.CursorIndex <= textbox.Text.MaxRuneCount || textbox.Text.RuneCount == 0) {
+		textbox.CursorIndex += offset
+		if textbox.CursorIndex < 0 {
+			textbox.CursorIndex = 0
+		}
+		if textbox.Text.MaxRuneCount > 0 && textbox.CursorIndex > textbox.Text.MaxRuneCount {
+			textbox.CursorIndex = textbox.Text.MaxRuneCount
+		}
+		textbox.Cursor.SetPosition(
+			mgl32.Vec2{
+				textbox.Text.Position.X() + float32(textbox.Text.CharPosition(textbox.CursorIndex)),
+				textbox.Text.Position.Y(),
+			})
+		textbox.ImmediateCursorDraw()
+	}
+}
+
 func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	// menu rendering (and text) is positioned in orthographic projection coordinates
 	// but click positions are based on window coordinates
@@ -402,8 +429,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 			index++
 		}
 		textbox.CursorIndex = index
-		textbox.Cursor.RuneCount = 1
-		textbox.Time = time.Now()
+		textbox.ImmediateCursorDraw()
 
 		textbox.Cursor.SetPosition(
 			mgl32.Vec2{
