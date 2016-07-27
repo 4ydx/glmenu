@@ -397,14 +397,14 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	X1, X2 := textbox.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
-		// wtf to do now...
-		index, side := textbox.Text.ClickedCharacter(xPos)
+		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.Offset[0]))
 		if side == gltext.CSRight {
 			index++
 		}
 		textbox.CursorIndex = index
 		textbox.Cursor.RuneCount = 1
 		textbox.Time = time.Now()
+
 		textbox.Cursor.SetPosition(
 			mgl32.Vec2{
 				textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
