@@ -98,6 +98,15 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// InsidePoint returns a point nearby the center of the label
+// Used to locate a screen position where clicking can be simulated
+func (label *Label) InsidePoint() (P Point) {
+	X1, X2 := label.OrthoToScreenCoord()
+	P.X = (X2.X-X1.X)/2 + X1.X
+	P.Y = (X2.Y-X1.Y)/2 + X1.Y
+	return
+}
+
 // IsReleased is checked for all labels in a menu when mouseup occurs
 func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox

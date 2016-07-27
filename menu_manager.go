@@ -153,17 +153,3 @@ func NewMenuManager(font *gltext.Font, startKey glfw.Key, startMenu string) *Men
 	mm.Menus = make(map[string]*Menu)
 	return mm
 }
-
-/*
-menuManager := NewMenuManager()
-
-m1 := menuManager.NewMenu("Name1", menuConfig)
-m1.NewLabel(..., "")
-m1.NewLabel(..., "Name2")
-
-m2 := menuManager.NewMenu("Name2", menuConfig)
-m2.NewLabel(..., "")
-m2.NewLabel(..., "Name1")
-
-menuManager.ResolveNavigation()
-*/
