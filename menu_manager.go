@@ -28,10 +28,10 @@ func (mm *MenuManager) Finalize() error {
 			if label.Config.Action == GOTO_MENU {
 				gotoMenu, ok := mm.Menus[label.Config.Goto]
 				if ok {
-					func(m *Menu, to *Menu, l *Label) {
+					func(from *Menu, to *Menu, l *Label) {
 						l.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 							if inBox {
-								m.Hide()
+								from.Hide()
 								to.Show()
 							}
 						}
@@ -107,6 +107,8 @@ func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults Me
 	if err != nil {
 		return nil, err
 	}
+	m.MenuManager = mm
+
 	if _, ok := mm.Menus[name]; ok {
 		return nil, errors.New(fmt.Sprintf("The named menu %s already exists.", name))
 	}

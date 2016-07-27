@@ -23,7 +23,6 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 
 	// menu 1
 	mainMenu, err := menuManager.NewMenu(window, "main", defaults, mgl32.Vec2{100, 0})
-	//mainMenu, err := menuManager.NewMenu(window, "main", defaults, mgl32.Vec2{0, 0})
 	if err != nil {
 		fmt.Println("error loading the font")
 		os.Exit(1)

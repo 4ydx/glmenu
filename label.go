@@ -35,11 +35,12 @@ type Label struct {
 
 	// public methods are expected to be defined by the user and run before the private method are called
 	// if a public method is undefined, it is skipped.  Currently I have only defined onRelease as private.
-	OnClick    LabelInteraction
-	onRelease  LabelInteraction
-	OnRelease  LabelInteraction
-	OnHover    LabelInteraction
-	OnNotHover func()
+	OnClick       LabelInteraction
+	onRelease     LabelInteraction // set internally.  handles linking different menus together, closing menus, closing game etc.
+	StopOnRelease bool             // set to true in order to prevent onRelease being called
+	OnRelease     LabelInteraction
+	OnHover       LabelInteraction
+	OnNotHover    func()
 }
 
 func (label *Label) Reset() {
@@ -111,7 +112,10 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 		if label.OnRelease != nil {
 			label.OnRelease(xPos, yPos, button, inBox)
 		}
-		label.onRelease(xPos, yPos, button, inBox)
+		if !label.StopOnRelease {
+			label.onRelease(xPos, yPos, button, inBox)
+		}
+		label.StopOnRelease = false
 	}
 	label.IsClick = false
 }

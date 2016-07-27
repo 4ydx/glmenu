@@ -55,6 +55,8 @@ type MenuDefaults struct {
 }
 
 type Menu struct {
+	*MenuManager
+
 	//trigger
 	OnShow         func()
 	OnComplete     func()
@@ -436,6 +438,9 @@ func (menu *Menu) Release() {
 }
 
 func (menu *Menu) Draw() bool {
+	if !menu.MenuManager.IsResolved {
+		panic("A menu manager must be finalized prior to drawing!")
+	}
 	if !menu.IsVisible {
 		return menu.IsVisible
 	}
