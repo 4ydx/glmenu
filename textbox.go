@@ -44,8 +44,8 @@ type TextBox struct {
 	Menu               *Menu
 	Text               *gltext.Text
 	Cursor             *gltext.Text
-	CursorIndex        int
-	CursorBarFrequency int64
+	CursorIndex        int   // position of the cursor within the text
+	CursorBarFrequency int64 // how long does each flash cycle last (visible -> invisible -> visible)
 	MaxLength          int
 	Time               time.Time
 	IsEdit             bool
@@ -394,6 +394,16 @@ func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	return
 }
 
+// InsidePoint returns a point nearby the center of the label
+// Used to locate a screen position where clicking can be simulated
+// Click on the right side in order to place the cursor to the very right of any text
+func (textbox *TextBox) InsidePoint() (P Point) {
+	X1, X2 := textbox.OrthoToScreenCoord()
+	P.X = (X2.X - 0.1)
+	P.Y = (X2.Y-X1.Y)/2 + X1.Y
+	return
+}
+
 func (textbox *TextBox) ImmediateCursorDraw() {
 	textbox.Cursor.RuneCount = 1
 	textbox.Time = time.Now()
@@ -460,4 +470,20 @@ func (textbox *TextBox) IsReleased(xPos, yPos float64, button MouseClick) {
 		}
 	}
 	textbox.IsClick = false
+}
+
+func (textbox *TextBox) NavigateTo() {
+	if !textbox.IsEdit {
+		point := textbox.InsidePoint()
+		textbox.IsClicked(float64(point.X), float64(point.Y), MouseLeft)
+		textbox.IsReleased(float64(point.X), float64(point.Y), MouseLeft)
+	}
+}
+
+func (textbox *TextBox) NavigateAway() bool {
+	if textbox.IsEdit {
+		textbox.IsEdit = false
+		return true
+	}
+	return false
 }

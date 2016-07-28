@@ -9,6 +9,8 @@ type Border struct {
 }
 
 type Formatable interface {
+	NavigateTo()
+	NavigateAway() bool
 	GetPosition() mgl32.Vec2
 	SetPosition(v mgl32.Vec2)
 	GetBorder() Border // the padding around the Formatable object

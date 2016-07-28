@@ -154,3 +154,18 @@ func (label *Label) Height() float32 {
 func (label *Label) Width() float32 {
 	return label.Text.Width()
 }
+
+func (label *Label) NavigateTo() {
+	point := label.InsidePoint()
+	if label.OnHover != nil {
+		label.IsHovered(float64(point.X), float64(point.Y))
+	}
+}
+
+func (label *Label) NavigateAway() bool {
+	if label.IsHover {
+		label.IsHover = false
+		return true
+	}
+	return false
+}

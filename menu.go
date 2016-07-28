@@ -37,12 +37,15 @@ void main() {
 ` + "\x00"
 
 type MouseClick int
+type Navigation int
 
 const (
 	MouseUnclicked MouseClick = iota
 	MouseLeft
 	MouseRight
 	MouseCenter
+	NavigationMouse = 0
+	NavigationKey   = 1
 )
 
 type MenuDefaults struct {
@@ -55,9 +58,10 @@ type MenuDefaults struct {
 }
 
 type Menu struct {
+	// parent MenuManager
 	*MenuManager
 
-	//trigger
+	// trigger
 	OnShow         func()
 	OnComplete     func()
 	OnEnterRelease func()
@@ -75,11 +79,16 @@ type Menu struct {
 	Background        mgl32.Vec4
 
 	// interactive objects
-	Font   *gltext.Font
-	Labels []*Label
-	//LabelBorder Border
+	Font       *gltext.Font
+	Labels     []*Label
 	TextBoxes  []*TextBox
 	Formatable []Formatable
+
+	// Up/Down keypress -> NavigationVia set to "Key"
+	// When in "Key", mouse navigation only happens once the mouse has been moved enough from LastMousePosition
+	LastMousePosition mgl32.Vec2
+	NavigationVia     Navigation
+	NavigationIndex   int // once up/down arrows are pressed, determine which element needs to be entered/hovered over
 
 	// increment during a scale operation
 	TextScaleRate float32
@@ -502,6 +511,20 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	if !menu.IsVisible {
 		return
 	}
+	dist := math.Sqrt(math.Pow(float64(menu.LastMousePosition[0])-xPos, 2) + math.Pow(float64(menu.LastMousePosition[1])-yPos, 2))
+	menu.LastMousePosition[0] = float32(xPos)
+	menu.LastMousePosition[1] = float32(yPos)
+	if dist > 1 {
+		// a bit of mouse movement will reenable mouse position evaluation
+		menu.NavigationVia = NavigationMouse
+		menu.NavigationIndex = -1
+	}
+	if menu.NavigationVia == NavigationKey {
+		if menu.NavigationIndex < len(menu.Formatable) {
+			menu.Formatable[menu.NavigationIndex].NavigateTo()
+		}
+		return
+	}
 	yPos = float64(menu.WindowHeight) - yPos
 	for i := range menu.Labels {
 		if menu.Labels[i].OnHover != nil {
@@ -520,6 +543,31 @@ func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
 }
 
 func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
+	if key == glfw.KeyUp || key == glfw.KeyDown {
+		for i := range menu.Formatable {
+			if menu.Formatable[i].NavigateAway() {
+				menu.NavigationIndex = i
+			}
+		}
+		// adjust endpoints
+		if key == glfw.KeyUp {
+			menu.NavigationIndex -= 1
+		} else {
+			menu.NavigationIndex += 1
+		}
+		if menu.NavigationIndex < 0 {
+			menu.NavigationIndex = 0
+		}
+		if menu.NavigationIndex >= len(menu.Formatable) {
+			menu.NavigationIndex = len(menu.Formatable) - 1
+		}
+		for i := range menu.Formatable {
+			if i == menu.NavigationIndex {
+				menu.Formatable[i].NavigateTo()
+			}
+		}
+		menu.NavigationVia = NavigationKey
+	}
 	for i := range menu.TextBoxes {
 		menu.TextBoxes[i].KeyRelease(key, withShift)
 	}
