@@ -118,6 +118,12 @@ func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults Me
 	return m, nil
 }
 
+func (mm *MenuManager) Hide() {
+	for _, m := range mm.Menus {
+		m.Hide()
+	}
+}
+
 func (mm *MenuManager) Show(name string) error {
 	m, ok := mm.Menus[name]
 	if !ok {
