@@ -169,3 +169,12 @@ func (label *Label) NavigateAway() bool {
 	}
 	return false
 }
+
+func (label *Label) Follow() bool {
+	if label.IsHover {
+		point := label.InsidePoint()
+		label.IsClicked(float64(point.X), float64(point.Y), MouseLeft)
+		label.IsReleased(float64(point.X), float64(point.Y), MouseLeft)
+	}
+	return true
+}

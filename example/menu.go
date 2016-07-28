@@ -33,8 +33,23 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	textbox.Text.MaxRuneCount = 16
 	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "option"})
-	mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.NOOP})
+	quit := mainMenu.NewLabel("Quit", glmenu.LabelConfig{Action: glmenu.EXIT_GAME})
+	mainMenu.OnEnterRelease = func() bool {
+		if mainMenu.IsVisible {
+			for i := range mainMenu.Formatable {
+				if !mainMenu.Formatable[i].Follow() {
+					// a textbox is being edited and is letting us know to then handle the Enter keypress
+					// when a hovered label's Follow is called it will internally simulate a mouse click
+					point := quit.InsidePoint()
+					quit.IsClicked(float64(point.X), float64(point.Y), glmenu.MouseLeft)
+					quit.IsReleased(float64(point.X), float64(point.Y), glmenu.MouseLeft)
+				}
+			}
+			return true
+		}
+		return false
+	}
 
 	// menu 2
 	optionMenu, err := menuManager.NewMenu(window, "option", glmenu.MenuDefaults{BackgroundColor: mgl32.Vec4{0, 1, 1, 1}, Dimensions: mgl32.Vec2{200, 200}}, mgl32.Vec2{})
@@ -43,6 +58,15 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		os.Exit(1)
 	}
 	optionMenu.NewLabel("Back", glmenu.LabelConfig{Action: glmenu.GOTO_MENU, Goto: "main"})
+	optionMenu.OnEnterRelease = func() bool {
+		if optionMenu.IsVisible {
+			for i := range optionMenu.Formatable {
+				optionMenu.Formatable[i].Follow()
+			}
+			return true
+		}
+		return false
+	}
 
 	// complete setup
 	menuManager.Finalize()

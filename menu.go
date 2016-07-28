@@ -62,9 +62,13 @@ type Menu struct {
 	*MenuManager
 
 	// trigger
-	OnShow         func()
-	OnComplete     func()
-	OnEnterRelease func()
+	OnShow     func()
+	OnComplete func()
+
+	// the return value specifies lets the MenuManager know if
+	// it should continue to execute the KeyRelease method on
+	// other menus.  the example code should make this a bit clearer.
+	OnEnterRelease func() bool
 
 	// options
 	Defaults     MenuDefaults
@@ -542,7 +546,7 @@ func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
 	return
 }
 
-func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
+func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
 	if key == glfw.KeyUp || key == glfw.KeyDown {
 		for i := range menu.Formatable {
 			if menu.Formatable[i].NavigateAway() {
@@ -558,7 +562,7 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 		if menu.NavigationIndex < 0 {
 			menu.NavigationIndex = 0
 		}
-		if menu.NavigationIndex >= len(menu.Formatable) {
+		if menu.NavigationIndex == len(menu.Formatable) {
 			menu.NavigationIndex = len(menu.Formatable) - 1
 		}
 		for i := range menu.Formatable {
@@ -572,6 +576,9 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 		menu.TextBoxes[i].KeyRelease(key, withShift)
 	}
 	if menu.OnEnterRelease != nil && key == glfw.KeyEnter {
-		menu.OnEnterRelease()
+		if menu.OnEnterRelease() {
+			return true
+		}
 	}
+	return false
 }
