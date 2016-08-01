@@ -58,6 +58,7 @@ func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseClick(xPos, yPos, button)
+			return
 		}
 	}
 }
@@ -66,6 +67,7 @@ func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseRelease(xPos, yPos, button)
+			return
 		}
 	}
 }
@@ -74,13 +76,15 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseHover(xPos, yPos)
+			return
 		}
 	}
 }
 
 func (mm *MenuManager) KeyRelease(key glfw.Key, withShift bool) {
 	for _, menu := range mm.Menus {
-		if menu.IsVisible && menu.KeyRelease(key, withShift) {
+		if menu.IsVisible {
+			menu.KeyRelease(key, withShift)
 			return
 		}
 	}
@@ -105,7 +109,7 @@ func (mm *MenuManager) Release() {
 }
 
 func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
-	m, err := NewMenu(window, mm.Font, menuDefaults, offsetBy)
+	m, err := NewMenu(window, name, mm.Font, menuDefaults, offsetBy)
 	if err != nil {
 		return nil, err
 	}

@@ -61,14 +61,12 @@ type Menu struct {
 	// parent MenuManager
 	*MenuManager
 
-	// trigger
-	OnShow     func()
-	OnComplete func()
+	Name string
 
-	// the return value specifies lets the MenuManager know if
-	// it should continue to execute the KeyRelease method on
-	// other menus.  the example code should make this a bit clearer.
-	OnEnterRelease func() bool
+	// trigger
+	OnShow         func()
+	OnComplete     func()
+	OnEnterRelease func()
 
 	// options
 	Defaults     MenuDefaults
@@ -338,7 +336,7 @@ func (menu *Menu) Toggle() {
 }
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
-func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
+func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
 	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
 	// this would probably require some changes though in order to track mouse movement.
 	width, height := window.GetSize()
@@ -355,6 +353,18 @@ func NewMenu(window *glfw.Window, font *gltext.Font, defaults MenuDefaults, offs
 	menu.Background = defaults.BackgroundColor
 	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
 	menu.ResizeWindow(float32(width), float32(height))
+	menu.Name = name
+
+	// reasonable default is to follow the first followable element when hitting enter i suppose
+	menu.OnEnterRelease = func() {
+		if menu.IsVisible {
+			for i := range menu.Formatable {
+				if menu.Formatable[i].Follow() {
+					return
+				}
+			}
+		}
+	}
 
 	// create shader program and define attributes and uniforms
 	var err error
@@ -546,7 +556,7 @@ func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
 	return
 }
 
-func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
+func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 	if key == glfw.KeyUp || key == glfw.KeyDown {
 		for i := range menu.Formatable {
 			if menu.Formatable[i].NavigateAway() {
@@ -606,9 +616,6 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
 		menu.TextBoxes[i].KeyRelease(key, withShift)
 	}
 	if menu.OnEnterRelease != nil && key == glfw.KeyEnter {
-		if menu.OnEnterRelease() {
-			return true
-		}
+		menu.OnEnterRelease()
 	}
-	return false
 }

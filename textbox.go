@@ -488,17 +488,11 @@ func (textbox *TextBox) NavigateAway() bool {
 	return false
 }
 
-// Follow should be called when the enter key is pressed in a menu
-// to help determine what default behavior should take place
-// when false is returned, we allow the caller to know that it can
-// take responsibility for what happens next. EG the textbox is being
-// edited, the Enter key is pressed, now we want some default behavior
-// of the menu to execute (likely some label action).
 func (textbox *TextBox) Follow() bool {
 	if textbox.IsEdit {
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func (textbox *TextBox) IsNoop() bool {

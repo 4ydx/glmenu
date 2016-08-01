@@ -176,8 +176,9 @@ func (label *Label) Follow() bool {
 		point := label.InsidePoint()
 		label.IsClicked(float64(point.X), float64(point.Y), MouseLeft)
 		label.IsReleased(float64(point.X), float64(point.Y), MouseLeft)
+		return true
 	}
-	return true
+	return false
 }
 
 func (label *Label) IsNoop() bool {
