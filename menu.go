@@ -1,6 +1,7 @@
 package glmenu
 
 import (
+	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -314,6 +315,8 @@ func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int3
 func (menu *Menu) Show() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
+		menu.NavigationVia = NavigationMouse
+		menu.NavigationIndex = -1
 	}
 	menu.IsVisible = true
 	if menu.OnShow != nil {
@@ -524,9 +527,7 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 		menu.NavigationIndex = -1
 	}
 	if menu.NavigationVia == NavigationKey {
-		if menu.NavigationIndex < len(menu.Formatable) {
-			menu.Formatable[menu.NavigationIndex].NavigateTo()
-		}
+		menu.Formatable[menu.NavigationIndex].NavigateTo()
 		return
 	}
 	yPos = float64(menu.WindowHeight) - yPos
@@ -553,18 +554,50 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
 				menu.NavigationIndex = i
 			}
 		}
-		// adjust endpoints
-		if key == glfw.KeyUp {
-			menu.NavigationIndex -= 1
-		} else {
-			menu.NavigationIndex += 1
+		// adjust endpoints skipping objects that are NOOP
+		for {
+			if key == glfw.KeyUp {
+				menu.NavigationIndex -= 1
+			} else {
+				menu.NavigationIndex += 1
+			}
+			if menu.NavigationIndex < 0 || menu.NavigationIndex == len(menu.Formatable) || !menu.Formatable[menu.NavigationIndex].IsNoop() {
+				if menu.NavigationIndex < -1 {
+					menu.NavigationIndex = -1
+				}
+				// once we have found something that can be interacted with or have gone beyond our boundaries, break the for loop
+				break
+			}
+		}
+		// if we ended up going beyond a boundary try to go back into menu entries to find something that can be interacted with
+		// the worst case scenario is that everything is NOOP in which case we just need to exit
+		if menu.NavigationIndex < 0 {
+			// went up the menu too much now go back down
+			for {
+				menu.NavigationIndex++
+				if menu.NavigationIndex == len(menu.Formatable) || !menu.Formatable[menu.NavigationIndex].IsNoop() {
+					fmt.Println("a", menu.NavigationIndex)
+					break
+				}
+			}
+		} else if menu.NavigationIndex == len(menu.Formatable) {
+			// went down the menu too much now go back up
+			for {
+				menu.NavigationIndex--
+				if menu.NavigationIndex < 0 || !menu.Formatable[menu.NavigationIndex].IsNoop() {
+					fmt.Println("b", menu.NavigationIndex)
+					break
+				}
+			}
 		}
 		if menu.NavigationIndex < 0 {
 			menu.NavigationIndex = 0
 		}
 		if menu.NavigationIndex == len(menu.Formatable) {
-			menu.NavigationIndex = len(menu.Formatable) - 1
+			menu.NavigationIndex -= 1
 		}
+
+		// perform necessary visual changes as we navigate to the next place
 		for i := range menu.Formatable {
 			if i == menu.NavigationIndex {
 				menu.Formatable[i].NavigateTo()

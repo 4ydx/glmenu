@@ -500,3 +500,7 @@ func (textbox *TextBox) Follow() bool {
 	}
 	return true
 }
+
+func (textbox *TextBox) IsNoop() bool {
+	return false
+}

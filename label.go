@@ -92,7 +92,6 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	if inBox {
 		label.IsClick = true
 		if label.OnClick != nil {
-			//label.OnClick(label, xPos, yPos, button, inBox)
 			label.OnClick(xPos, yPos, button, inBox)
 		}
 	}
@@ -162,6 +161,8 @@ func (label *Label) NavigateTo() {
 	}
 }
 
+// NavigateAway if we end up needing to navigate away from this item then let the caller know
+// because it might need that information.  return value of 'true'
 func (label *Label) NavigateAway() bool {
 	if label.IsHover {
 		label.IsHover = false
@@ -177,4 +178,8 @@ func (label *Label) Follow() bool {
 		label.IsReleased(float64(point.X), float64(point.Y), MouseLeft)
 	}
 	return true
+}
+
+func (label *Label) IsNoop() bool {
+	return label.Config.Action == NOOP
 }

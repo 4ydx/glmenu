@@ -15,6 +15,8 @@ type Formatable interface {
 	// up/down key navigation
 	NavigateTo()
 	NavigateAway() bool
+	// is the this object something that can be interacted with by the user
+	IsNoop() bool
 	// rendering
 	GetPosition() mgl32.Vec2
 	SetPosition(v mgl32.Vec2)
