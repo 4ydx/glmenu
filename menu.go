@@ -1,7 +1,6 @@
 package glmenu
 
 import (
-	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -576,7 +575,6 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
 			for {
 				menu.NavigationIndex++
 				if menu.NavigationIndex == len(menu.Formatable) || !menu.Formatable[menu.NavigationIndex].IsNoop() {
-					fmt.Println("a", menu.NavigationIndex)
 					break
 				}
 			}
@@ -585,7 +583,6 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) bool {
 			for {
 				menu.NavigationIndex--
 				if menu.NavigationIndex < 0 || !menu.Formatable[menu.NavigationIndex].IsNoop() {
-					fmt.Println("b", menu.NavigationIndex)
 					break
 				}
 			}
