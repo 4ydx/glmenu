@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 type MenuManager struct {
@@ -108,8 +107,8 @@ func (mm *MenuManager) Release() {
 	}
 }
 
-func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
-	m, err := NewMenu(window, name, mm.Font, menuDefaults, offsetBy)
+func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults MenuDefaults, screenPosition ScreenPosition) (*Menu, error) {
+	m, err := NewMenu(window, name, mm.Font, menuDefaults, screenPosition)
 	if err != nil {
 		return nil, err
 	}

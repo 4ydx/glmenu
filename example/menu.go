@@ -23,7 +23,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 	}
 
 	// menu 1
-	mainMenu, err := menuManager.NewMenu(window, "main", defaults, mgl32.Vec2{-100, 0})
+	mainMenu, err := menuManager.NewMenu(window, "main", defaults, glmenu.ScreenCenter)
 	if err != nil {
 		fmt.Println("error loading the font")
 		os.Exit(1)
@@ -41,7 +41,7 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		Padding:         mgl32.Vec2{10, 10},
 		HoverPadding:    mgl32.Vec2{10, 10},
 	}
-	optionMenu, err := menuManager.NewMenu(window, "option", defaults, mgl32.Vec2{})
+	optionMenu, err := menuManager.NewMenu(window, "option", defaults, glmenu.ScreenTopCenter)
 	if err != nil {
 		fmt.Println("error loading font")
 		os.Exit(1)

@@ -434,7 +434,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	X1, X2 := textbox.OrthoToScreenCoord()
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
-		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.Offset[0]))
+		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.screenPositionOffset[0]))
 		if side == gltext.CSRight {
 			index++
 		}

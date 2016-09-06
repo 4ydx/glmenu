@@ -39,17 +39,32 @@ void main() {
 type MouseClick int
 type Navigation int
 type Alignment int
+type ScreenPosition int
 
 const (
 	MouseUnclicked MouseClick = iota
 	MouseLeft
 	MouseRight
 	MouseCenter
-	NavigationMouse = 0
-	NavigationKey   = 1
-	AlignCenter     = 0
-	AlignRight      = 1
-	AlignLeft       = 2
+
+	NavigationMouse Navigation = 0
+	NavigationKey              = 1
+
+	AlignCenter Alignment = 0
+	AlignRight            = 1
+	AlignLeft             = 2
+
+	ScreenCenter      ScreenPosition = 0
+	ScreenTopLeft                    = 1
+	ScreenTopCenter                  = 2
+	ScreenTopRight                   = 3
+	ScreenLeft                       = 4
+	ScreenRight                      = 5
+	ScreenLowerLeft                  = 6
+	ScreenLowerCenter                = 7
+	ScreenLowerRight                 = 8
+
+	ScreenPadding = float32(10) // used by screen positioning calculations
 )
 
 type MenuDefaults struct {
@@ -89,7 +104,7 @@ type Menu struct {
 	Font       *gltext.Font
 	Labels     []*Label
 	TextBoxes  []*TextBox
-	Formatable []Formatable
+	Formatable []Formatable // all labels and textboxes
 
 	// Up/Down keypress -> NavigationVia set to "Key"
 	// When in "Key", mouse navigation only happens once the mouse has been moved enough from LastMousePosition
@@ -101,20 +116,21 @@ type Menu struct {
 	TextScaleRate float32
 
 	// opengl oriented
-	Offset        mgl32.Vec2
-	Window        *glfw.Window
-	WindowWidth   float32
-	WindowHeight  float32
-	program       uint32 // shader program
-	glMatrix      int32  // ortho matrix
-	position      uint32 // index location
-	vao           uint32
-	vbo           uint32
-	ebo           uint32
-	vboData       []float32
-	vboIndexCount int
-	eboData       []int32
-	eboIndexCount int
+	ScreenPosition       ScreenPosition
+	screenPositionOffset mgl32.Vec2
+	Window               *glfw.Window
+	WindowWidth          float32
+	WindowHeight         float32
+	program              uint32 // shader program
+	glMatrix             int32  // ortho matrix
+	position             uint32 // index location
+	vao                  uint32
+	vbo                  uint32
+	ebo                  uint32
+	vboData              []float32
+	vboIndexCount        int
+	eboData              []int32
+	eboIndexCount        int
 }
 
 func (menu *Menu) Finalize(align Alignment) {
@@ -122,7 +138,7 @@ func (menu *Menu) Finalize(align Alignment) {
 	glint_size := 4
 
 	menu.format(align)
-	menu.lowerLeft = menu.findCenter(menu.Offset)
+	menu.lowerLeft = menu.findCenter()
 	menu.makeBufferData()
 
 	// bind data
@@ -279,6 +295,35 @@ func (menu *Menu) format(align Alignment) {
 		menu.Width = wTotal + menu.Defaults.Padding.X()*2
 	}
 
+	// calculate an appropriate offset based on the screen position that was requested
+	ww, wh := menu.Window.GetSize()
+	switch menu.ScreenPosition {
+	case ScreenTopLeft:
+		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+	case ScreenLeft:
+		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = 0
+	case ScreenLowerLeft:
+		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+	case ScreenTopCenter:
+		menu.screenPositionOffset[0] = 0
+		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+	case ScreenLowerCenter:
+		menu.screenPositionOffset[0] = 0
+		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+	case ScreenTopRight:
+		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+	case ScreenRight:
+		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = 0
+	case ScreenLowerRight:
+		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+	}
+
 	// depending on the number of menu elements a vertically centered menus formatting will differ
 	// - the middle object in a menu with an odd number of objects has value 0 = middleIndex-float32(i)
 	//   or, in the case of even values, the two middle values are just around the center
@@ -299,7 +344,7 @@ func (menu *Menu) format(align Alignment) {
 					xOffset = -xOffset
 				}
 			}
-			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.Offset.X(), yOffset + l.GetPosition().Y() + menu.Offset.Y()})
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.screenPositionOffset.X(), yOffset + l.GetPosition().Y() + menu.screenPositionOffset.Y()})
 		}
 	} else {
 		for i, l := range menu.Formatable {
@@ -316,7 +361,7 @@ func (menu *Menu) format(align Alignment) {
 					xOffset = -xOffset
 				}
 			}
-			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.Offset.X(), yOffset + l.GetPosition().Y() + menu.Offset.Y()})
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.screenPositionOffset.X(), yOffset + l.GetPosition().Y() + menu.screenPositionOffset.Y()})
 		}
 	}
 }
@@ -361,19 +406,19 @@ func (menu *Menu) Toggle() {
 }
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
-func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuDefaults, offsetBy mgl32.Vec2) (*Menu, error) {
+func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuDefaults, screenPosition ScreenPosition) (*Menu, error) {
 	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
 	// this would probably require some changes though in order to track mouse movement.
 	width, height := window.GetSize()
 	menu := &Menu{
-		Defaults:  defaults,
-		Font:      font,
-		IsVisible: false,
-		ShowOnKey: glfw.KeyM,
-		Width:     defaults.Dimensions.X(),
-		Height:    defaults.Dimensions.Y(),
-		Window:    window,
-		Offset:    offsetBy,
+		Defaults:       defaults,
+		Font:           font,
+		IsVisible:      false,
+		ShowOnKey:      glfw.KeyM,
+		Width:          defaults.Dimensions.X(),
+		Height:         defaults.Dimensions.Y(),
+		Window:         window,
+		ScreenPosition: screenPosition,
 	}
 	menu.Background = defaults.BackgroundColor
 	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
@@ -572,12 +617,12 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	}
 }
 
-func (menu *Menu) findCenter(offsetBy mgl32.Vec2) (lowerLeft Point) {
+func (menu *Menu) findCenter() (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = -menuWidthHalf + offsetBy.X()
-	lowerLeft.Y = -menuHeightHalf + offsetBy.Y()
+	lowerLeft.X = -menuWidthHalf + menu.screenPositionOffset.X()
+	lowerLeft.Y = -menuHeightHalf + menu.screenPositionOffset.Y()
 	return
 }
 
