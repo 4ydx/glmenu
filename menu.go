@@ -16,12 +16,15 @@ type Point struct {
 var vertexShaderSource string = `
 #version 330
 
+uniform mat4 scale_matrix;
 uniform mat4 matrix;
+uniform vec2 final_position;
 
 in vec4 position;
 
 void main() {
-  gl_Position = matrix * position;
+  vec4 scaled = scale_matrix * matrix * position;
+  gl_Position = vec4(scaled.x + final_position.x, scaled.y + final_position.y, scaled.z, scaled.w);
 }
 ` + "\x00"
 
@@ -72,6 +75,8 @@ type MenuDefaults struct {
 	TextHover       mgl32.Vec3
 	TextClick       mgl32.Vec3
 	BackgroundColor mgl32.Vec4
+	BorderColor     mgl32.Vec4
+	Border          mgl32.Vec2
 	Dimensions      mgl32.Vec2
 	Padding         mgl32.Vec2
 	HoverPadding    mgl32.Vec2
@@ -97,9 +102,6 @@ type Menu struct {
 	IsAutoCenter bool
 	lowerLeft    Point
 
-	backgroundUniform int32
-	Background        mgl32.Vec4
-
 	// interactive objects
 	Font       *gltext.Font
 	Labels     []*Label
@@ -122,15 +124,22 @@ type Menu struct {
 	WindowWidth          float32
 	WindowHeight         float32
 	program              uint32 // shader program
-	glMatrix             int32  // ortho matrix
-	position             uint32 // index location
-	vao                  uint32
-	vbo                  uint32
-	ebo                  uint32
-	vboData              []float32
-	vboIndexCount        int
-	eboData              []int32
-	eboIndexCount        int
+	backgroundUniform    int32
+	orthographicUniform  int32 // ortho matrix
+	finalPositionUniform int32 // offset to reposition based on ScreenPosition
+	scaleUniform         int32 // scale matrix
+
+	scaleIdent4   mgl32.Mat4
+	scaleMatrix   mgl32.Mat4
+	finalPosition mgl32.Vec2
+	position      uint32 // index location
+	vao           uint32
+	vbo           uint32
+	ebo           uint32
+	vboData       []float32
+	vboIndexCount int
+	eboData       []int32
+	eboIndexCount int
 }
 
 func (menu *Menu) Finalize(align Alignment) {
@@ -139,7 +148,22 @@ func (menu *Menu) Finalize(align Alignment) {
 
 	menu.format(align)
 	menu.lowerLeft = menu.findCenter()
+	menu.finalPosition = mgl32.Vec2{
+		menu.screenPositionOffset.X() / (menu.WindowWidth / 2),
+		menu.screenPositionOffset.Y() / (menu.WindowHeight / 2),
+	}
+	//	t.finalPosition[0] = v.X() / (t.Font.WindowWidth / 2)
+	//	t.finalPosition[1] = v.Y() / (t.Font.WindowHeight / 2)
 	menu.makeBufferData()
+
+	menu.scaleIdent4 = mgl32.Ident4()
+
+	// create a 5 pixel border
+	menu.scaleMatrix = mgl32.Scale3D(
+		1+menu.Defaults.Border.X()/(menu.Width/2),
+		1+menu.Defaults.Border.Y()/(menu.Height/2),
+		1,
+	)
 
 	// bind data
 	gl.BindVertexArray(menu.vao)
@@ -297,31 +321,33 @@ func (menu *Menu) format(align Alignment) {
 
 	// calculate an appropriate offset based on the screen position that was requested
 	ww, wh := menu.Window.GetSize()
+	menu.WindowWidth = float32(ww)
+	menu.WindowHeight = float32(wh)
 	switch menu.ScreenPosition {
 	case ScreenTopLeft:
-		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
-		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenLeft:
-		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
 		menu.screenPositionOffset[1] = 0
 	case ScreenLowerLeft:
-		menu.screenPositionOffset[0] = -(float32(ww)/2 - menu.Width/2) + ScreenPadding
-		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	case ScreenTopCenter:
 		menu.screenPositionOffset[0] = 0
-		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenLowerCenter:
 		menu.screenPositionOffset[0] = 0
-		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	case ScreenTopRight:
-		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
-		menu.screenPositionOffset[1] = +(float32(wh)/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenRight:
-		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
 		menu.screenPositionOffset[1] = 0
 	case ScreenLowerRight:
-		menu.screenPositionOffset[0] = +(float32(ww)/2 - menu.Width/2) - ScreenPadding
-		menu.screenPositionOffset[1] = -(float32(wh)/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	}
 
 	// depending on the number of menu elements a vertically centered menus formatting will differ
@@ -420,7 +446,7 @@ func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuD
 		Window:         window,
 		ScreenPosition: screenPosition,
 	}
-	menu.Background = defaults.BackgroundColor
+	//menu.Background = defaults.BackgroundColor
 	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
 	menu.ResizeWindow(float32(width), float32(height))
 	menu.Name = name
@@ -442,7 +468,9 @@ func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuD
 	if err != nil {
 		return nil, err
 	}
-	menu.glMatrix = gl.GetUniformLocation(menu.program, gl.Str("matrix\x00"))
+	menu.scaleUniform = gl.GetUniformLocation(menu.program, gl.Str("scale_matrix\x00"))
+	menu.orthographicUniform = gl.GetUniformLocation(menu.program, gl.Str("matrix\x00"))
+	menu.finalPositionUniform = gl.GetUniformLocation(menu.program, gl.Str("final_position\x00"))
 	menu.backgroundUniform = gl.GetUniformLocation(menu.program, gl.Str("background\x00"))
 	menu.position = uint32(gl.GetAttribLocation(menu.program, gl.Str("position\x00")))
 
@@ -541,17 +569,27 @@ func (menu *Menu) Draw() bool {
 	}
 	gl.UseProgram(menu.program)
 
-	gl.UniformMatrix4fv(menu.glMatrix, 1, false, &menu.Font.OrthographicMatrix[0])
-	gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Background[0])
+	for i := 0; i < 2; i++ {
+		// i == 0 is background draw at higher scale, producing a border around the menu
+		if i == 0 {
+			gl.UniformMatrix4fv(menu.scaleUniform, 1, false, &menu.scaleMatrix[0])
+			gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Defaults.BorderColor[0])
+		} else {
+			gl.UniformMatrix4fv(menu.scaleUniform, 1, false, &menu.scaleIdent4[0])
+			gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Defaults.BackgroundColor[0])
+		}
+		gl.Uniform2fv(menu.finalPositionUniform, 1, &menu.finalPosition[0])
+		gl.UniformMatrix4fv(menu.orthographicUniform, 1, false, &menu.Font.OrthographicMatrix[0])
 
-	gl.Enable(gl.BLEND)
-	gl.BlendEquation(gl.FUNC_ADD)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+		gl.Enable(gl.BLEND)
+		gl.BlendEquation(gl.FUNC_ADD)
+		gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-	gl.BindVertexArray(menu.vao)
-	gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
-	gl.BindVertexArray(0)
-	gl.Disable(gl.BLEND)
+		gl.BindVertexArray(menu.vao)
+		gl.DrawElements(gl.TRIANGLES, int32(menu.eboIndexCount), gl.UNSIGNED_INT, nil)
+		gl.BindVertexArray(0)
+		gl.Disable(gl.BLEND)
+	}
 
 	for i := range menu.Labels {
 		if !menu.Labels[i].IsHover {
@@ -621,8 +659,8 @@ func (menu *Menu) findCenter() (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = -menuWidthHalf + menu.screenPositionOffset.X()
-	lowerLeft.Y = -menuHeightHalf + menu.screenPositionOffset.Y()
+	lowerLeft.X = -menuWidthHalf  //+ menu.screenPositionOffset.X()
+	lowerLeft.Y = -menuHeightHalf //+ menu.screenPositionOffset.Y()
 	return
 }
 

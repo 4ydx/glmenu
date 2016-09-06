@@ -17,13 +17,15 @@ func MenuInit(window *glfw.Window, font *gltext.Font) {
 		TextClick:       mgl32.Vec3{250.0 / 255.0, 0, 154.0 / 255.0},
 		TextHover:       mgl32.Vec3{0, 250.0 / 255.0, 154.0 / 255.0},
 		BackgroundColor: mgl32.Vec4{0.5, 0.5, 0.5, 1.0},
+		BorderColor:     mgl32.Vec4{1, 1, 1, 1.0},
+		Border:          mgl32.Vec2{2, 2},
 		Dimensions:      mgl32.Vec2{0, 0},
 		Padding:         mgl32.Vec2{10, 10},
 		HoverPadding:    mgl32.Vec2{10, 10},
 	}
 
 	// menu 1
-	mainMenu, err := menuManager.NewMenu(window, "main", defaults, glmenu.ScreenCenter)
+	mainMenu, err := menuManager.NewMenu(window, "main", defaults, glmenu.ScreenLeft)
 	if err != nil {
 		fmt.Println("error loading the font")
 		os.Exit(1)
