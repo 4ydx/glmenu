@@ -98,8 +98,8 @@ func (textbox *TextBox) GetPosition() mgl32.Vec2 {
 	return textbox.Text.Position
 }
 
-func (textbox *TextBox) GetBorder() Border {
-	return Border{}
+func (textbox *TextBox) GetPadding() Padding {
+	return Padding{}
 }
 
 func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int32) (err error) {
@@ -497,4 +497,8 @@ func (textbox *TextBox) Follow() bool {
 
 func (textbox *TextBox) IsNoop() bool {
 	return false
+}
+
+func (textbox *TextBox) Type() FormatableType {
+	return FormatableTextbox
 }

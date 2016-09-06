@@ -9,21 +9,21 @@ import (
 )
 
 type MenuManager struct {
-	Font       *gltext.Font
-	StartKey   glfw.Key // they key that, when pressed, will display the StartMenu
-	StartMenu  string   // the name passed to each NewMenu call
-	Menus      map[string]*Menu
-	IsResolved bool
+	Font        *gltext.Font
+	StartKey    glfw.Key // they key that, when pressed, will display the StartMenu
+	StartMenu   string   // the name passed to each NewMenu call
+	Menus       map[string]*Menu
+	IsFinalized bool
 }
 
 // Finalize connects menus together and performs final formatting steps
 // this must be run after all menus are prepared
-func (mm *MenuManager) Finalize() error {
-	if mm.IsResolved {
-		return errors.New("Menus have already been resolved")
+func (mm *MenuManager) Finalize(align Alignment) error {
+	if mm.IsFinalized {
+		return errors.New("Menus have already been finalized")
 	}
 	for _, menu := range mm.Menus {
-		menu.Finalize()
+		menu.Finalize(align)
 		for _, label := range menu.Labels {
 			if label.Config.Action == GOTO_MENU {
 				gotoMenu, ok := mm.Menus[label.Config.Goto]
@@ -40,7 +40,7 @@ func (mm *MenuManager) Finalize() error {
 			}
 		}
 	}
-	mm.IsResolved = true
+	mm.IsFinalized = true
 	return nil
 }
 

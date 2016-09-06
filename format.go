@@ -4,7 +4,14 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type Border struct {
+type FormatableType int
+
+const (
+	FormatableLabel   = 0
+	FormatableTextbox = 1
+)
+
+type Padding struct {
 	X, Y float32
 }
 
@@ -20,7 +27,9 @@ type Formatable interface {
 	// rendering
 	GetPosition() mgl32.Vec2
 	SetPosition(v mgl32.Vec2)
-	GetBorder() Border // the padding around the Formatable object
+	GetPadding() Padding
 	Height() float32
 	Width() float32
+
+	Type() FormatableType
 }

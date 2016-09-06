@@ -38,6 +38,7 @@ void main() {
 
 type MouseClick int
 type Navigation int
+type Alignment int
 
 const (
 	MouseUnclicked MouseClick = iota
@@ -46,6 +47,9 @@ const (
 	MouseCenter
 	NavigationMouse = 0
 	NavigationKey   = 1
+	AlignCenter     = 0
+	AlignRight      = 1
+	AlignLeft       = 2
 )
 
 type MenuDefaults struct {
@@ -54,7 +58,8 @@ type MenuDefaults struct {
 	TextClick       mgl32.Vec3
 	BackgroundColor mgl32.Vec4
 	Dimensions      mgl32.Vec2
-	Border          float32
+	Padding         mgl32.Vec2
+	HoverPadding    mgl32.Vec2
 }
 
 type Menu struct {
@@ -112,11 +117,11 @@ type Menu struct {
 	eboIndexCount int
 }
 
-func (menu *Menu) Finalize() {
+func (menu *Menu) Finalize(align Alignment) {
 	glfloat_size := 4
 	glint_size := 4
 
-	menu.format()
+	menu.format(align)
 	menu.lowerLeft = menu.findCenter(menu.Offset)
 	menu.makeBufferData()
 
@@ -248,10 +253,10 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	return label
 }
 
-func (menu *Menu) format() {
+func (menu *Menu) format(align Alignment) {
 	var borders float32
 	height, width := float32(0), float32(0)
-	hTotal, wMax := float32(0), float32(0)
+	hTotal, wTotal := float32(0), float32(0)
 	length := len(menu.Formatable)
 	for _, l := range menu.Formatable {
 		if l.Height() > height {
@@ -260,38 +265,60 @@ func (menu *Menu) format() {
 		if l.Width() > width {
 			width = l.Width()
 		}
-		if l.Width() > wMax {
-			wMax = l.Width() + l.GetBorder().Y*2
+		if l.Width() > wTotal {
+			wTotal = l.Width() + l.GetPadding().Y*2
 		}
-		borders += l.GetBorder().Y * 2
+		borders += l.GetPadding().Y * 2
 	}
 	hTotal = height*float32(length) + borders
 
-	// not easily understood perhaps - formatting these things never is!
+	// readjust entire menu size to hold all objects
+	if menu.Height < hTotal+menu.Defaults.Padding.Y() {
+		menu.Height = hTotal + menu.Defaults.Padding.Y()*2
+	}
+	if menu.Width < wTotal+menu.Defaults.Padding.X() {
+		menu.Width = wTotal + menu.Defaults.Padding.X()*2
+	}
+
 	// depending on the number of menu elements a vertically centered menus formatting will differ
 	// - the middle object in a menu with an odd number of objects has value 0 = middleIndex-float32(i)
 	//   or, in the case of even values, the two middle values are just around the center
 	middleIndex := float32(math.Floor(float64(length / 2)))
-	switch length % 2 {
-	case 0:
+	if length%2 == 0 {
+		// even number of objects to vertically align
 		for i, l := range menu.Formatable {
-			vertical := height + l.GetBorder().Y*2
-			offset := (middleIndex-float32(i)-1)*vertical + vertical/2
-			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
+			vertical := height + l.GetPadding().Y*2
+			yOffset := (middleIndex-float32(i)-1)*vertical + vertical/2
+			xOffset := float32(0)
+			if align != AlignCenter {
+				if l.Type() == FormatableLabel {
+					xOffset = -((menu.Width-menu.Defaults.Padding.X()*2-menu.Defaults.HoverPadding.X())/2 - l.Width()/2)
+				} else {
+					xOffset = -((menu.Width-menu.Defaults.Padding.X()*2)/2 - l.Width()/2)
+				}
+				if align == AlignRight {
+					xOffset = -xOffset
+				}
+			}
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X(), yOffset + l.GetPosition().Y()})
 		}
-	case 1:
+	} else {
 		for i, l := range menu.Formatable {
-			vertical := height + l.GetBorder().Y*2
-			offset := (middleIndex - float32(i)) * vertical
-			l.SetPosition(mgl32.Vec2{0 + l.GetPosition().X(), offset + l.GetPosition().Y()})
+			vertical := height + l.GetPadding().Y*2
+			yOffset := (middleIndex - float32(i)) * vertical
+			xOffset := float32(0)
+			if align != AlignCenter {
+				if l.Type() == FormatableLabel {
+					xOffset = -((menu.Width-menu.Defaults.Padding.X()*2-menu.Defaults.HoverPadding.X())/2 - l.Width()/2)
+				} else {
+					xOffset = -((menu.Width-menu.Defaults.Padding.X()*2)/2 - l.Width()/2)
+				}
+				if align == AlignRight {
+					xOffset = -xOffset
+				}
+			}
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X(), yOffset + l.GetPosition().Y()})
 		}
-	}
-
-	if menu.Height < hTotal+menu.Defaults.Border {
-		menu.Height = hTotal + menu.Defaults.Border
-	}
-	if menu.Width < wMax+menu.Defaults.Border {
-		menu.Width = wMax + menu.Defaults.Border
 	}
 }
 
@@ -463,7 +490,7 @@ func (menu *Menu) Release() {
 }
 
 func (menu *Menu) Draw() bool {
-	if !menu.MenuManager.IsResolved {
+	if !menu.MenuManager.IsFinalized {
 		panic("A menu manager must be finalized prior to drawing!")
 	}
 	if !menu.IsVisible {

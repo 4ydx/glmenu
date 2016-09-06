@@ -15,9 +15,9 @@ const (
 )
 
 type LabelConfig struct {
-	Border Border
-	Action LabelAction
-	Goto   string
+	Padding Padding
+	Action  LabelAction
+	Goto    string
 }
 
 type LabelInteraction func(
@@ -51,8 +51,8 @@ func (label *Label) GetPosition() mgl32.Vec2 {
 	return label.Text.Position
 }
 
-func (label *Label) GetBorder() Border {
-	return label.Config.Border
+func (label *Label) GetPadding() Padding {
+	return label.Config.Padding
 }
 
 func (label *Label) SetString(str string, argv ...interface{}) {
@@ -183,4 +183,8 @@ func (label *Label) Follow() bool {
 
 func (label *Label) IsNoop() bool {
 	return label.Config.Action == NOOP
+}
+
+func (label *Label) Type() FormatableType {
+	return FormatableLabel
 }
