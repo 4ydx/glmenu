@@ -211,7 +211,6 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 
 	label.SetString(str)
 	label.Text.SetScale(1)
-	label.Text.SetPosition(menu.Offset)
 	label.Text.SetColor(menu.Defaults.TextColor)
 
 	if config.Action == NOOP {
@@ -300,7 +299,7 @@ func (menu *Menu) format(align Alignment) {
 					xOffset = -xOffset
 				}
 			}
-			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X(), yOffset + l.GetPosition().Y()})
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.Offset.X(), yOffset + l.GetPosition().Y() + menu.Offset.Y()})
 		}
 	} else {
 		for i, l := range menu.Formatable {
@@ -317,7 +316,7 @@ func (menu *Menu) format(align Alignment) {
 					xOffset = -xOffset
 				}
 			}
-			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X(), yOffset + l.GetPosition().Y()})
+			l.SetPosition(mgl32.Vec2{xOffset + l.GetPosition().X() + menu.Offset.X(), yOffset + l.GetPosition().Y() + menu.Offset.Y()})
 		}
 	}
 }
@@ -329,7 +328,6 @@ func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int3
 	textbox.SetString(str)
 	textbox.SetColor(menu.Defaults.TextColor)
 	textbox.Text.SetScale(1)
-	textbox.Text.SetPosition(menu.Offset)
 
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
 	menu.Formatable = append(menu.Formatable, textbox)
