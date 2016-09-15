@@ -152,8 +152,6 @@ func (menu *Menu) Finalize(align Alignment) {
 		menu.screenPositionOffset.X() / (menu.WindowWidth / 2),
 		menu.screenPositionOffset.Y() / (menu.WindowHeight / 2),
 	}
-	//	t.finalPosition[0] = v.X() / (t.Font.WindowWidth / 2)
-	//	t.finalPosition[1] = v.Y() / (t.Font.WindowHeight / 2)
 	menu.makeBufferData()
 
 	menu.scaleIdent4 = mgl32.Ident4()
