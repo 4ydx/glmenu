@@ -6,4 +6,4 @@
 - Alignment of labels.  Default is centered.
 - Barebones at the moment.  
 
-[Example](https://github.com/4ydx/glmenu_example)
+[Example](https://github.com/4ydx/glmenu/tree/master/example)
