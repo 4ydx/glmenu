@@ -8,4 +8,6 @@
 
 [Example](https://github.com/4ydx/glmenu/tree/master/example)
 
+Screenshot depicting off center menu with right justification of the text.
+
 ![Alt text](/example/example.png?raw=true "Screenshot")
