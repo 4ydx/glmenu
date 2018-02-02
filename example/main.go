@@ -90,21 +90,19 @@ func main() {
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	fmt.Println("Opengl version", version)
 
-	// load font
-	fd, err := os.Open("font/luximr.ttf")
-	if err != nil {
-		panic(err)
-	}
-	defer fd.Close()
-
 	font, err := gltext.LoadTruetype("fontconfigs")
 	if err == nil {
 		fmt.Println("Font loaded from disk...")
 	} else {
+		fd, err := os.Open("font/luximr.ttf")
+		if err != nil {
+			panic(err)
+		}
+		defer fd.Close()
+
 		runesPerRow := fixed.Int26_6(16)
 		runeRanges := make(gltext.RuneRanges, 0)
-		runeRange := gltext.RuneRange{Low: 1, High: 128}
-		runeRanges = append(runeRanges, runeRange)
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 1, High: 128})
 
 		scale := fixed.Int26_6(25)
 		font, err = gltext.NewTruetype(fd, scale, runeRanges, runesPerRow)
@@ -130,7 +128,7 @@ func main() {
 		if menuManager.Draw() {
 			// pause gameplay
 		} else {
-			// do stuff
+			// play game
 		}
 		window.SwapBuffers()
 		glfw.PollEvents()
