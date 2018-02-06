@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/4ydx/glmenu"
-	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"os"
 )
 
-func MenuInit(window *glfw.Window, font *gltext.Font) {
+func MenuInit(window *glfw.Window, font *v41.Font) {
 	menuManager = glmenu.NewMenuManager(font, glfw.KeyM, "main")
 
 	defaults := glmenu.MenuDefaults{

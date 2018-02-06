@@ -1,7 +1,7 @@
 package glmenu
 
 import (
-	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -29,7 +29,7 @@ type LabelInteraction func(
 type Label struct {
 	Config  LabelConfig
 	Menu    *Menu
-	Text    *gltext.Text
+	Text    *v41.Text
 	IsHover bool
 	IsClick bool
 

@@ -2,6 +2,7 @@ package glmenu
 
 import (
 	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -103,7 +104,7 @@ type Menu struct {
 	lowerLeft    Point
 
 	// interactive objects
-	Font       *gltext.Font
+	Font       *v41.Font
 	Labels     []*Label
 	TextBoxes  []*TextBox
 	Formatable []Formatable // all labels and textboxes
@@ -220,7 +221,7 @@ func (menu *Menu) NewMenuTexture(imagePath string, dimensions mgl32.Vec2) (mt *M
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 
 	// create shader program and define attributes and uniforms
-	mt.program, err = gltext.NewProgram(menuTextureVertexShaderSource, menuTextureFragmentShaderSource)
+	mt.program, err = v41.NewProgram(menuTextureVertexShaderSource, menuTextureFragmentShaderSource)
 	if err != nil {
 		return mt, err
 	}
@@ -242,7 +243,7 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label := &Label{
 		Config: config,
 		Menu:   menu,
-		Text:   gltext.NewText(menu.Font, 1.0, 1.1),
+		Text:   v41.NewText(menu.Font, 1.0, 1.1),
 	}
 	menu.Labels = append(menu.Labels, label)
 	menu.Formatable = append(menu.Formatable, label)
@@ -430,7 +431,7 @@ func (menu *Menu) Toggle() {
 }
 
 // NewMenu creates a new menu object with a background centered on the screen or positioned using offsetBy
-func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuDefaults, screenPosition ScreenPosition) (*Menu, error) {
+func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefaults, screenPosition ScreenPosition) (*Menu, error) {
 	// i believe we are actually supposed to pass in the framebuffer sizes when creating the orthographic projection
 	// this would probably require some changes though in order to track mouse movement.
 	width, height := window.GetSize()
@@ -462,7 +463,7 @@ func NewMenu(window *glfw.Window, name string, font *gltext.Font, defaults MenuD
 
 	// create shader program and define attributes and uniforms
 	var err error
-	menu.program, err = gltext.NewProgram(vertexShaderSource, fragmentShaderSource)
+	menu.program, err = v41.NewProgram(vertexShaderSource, fragmentShaderSource)
 	if err != nil {
 		return nil, err
 	}

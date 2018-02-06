@@ -3,12 +3,12 @@ package glmenu
 import (
 	"errors"
 	"fmt"
-	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 type MenuManager struct {
-	Font        *gltext.Font
+	Font        *v41.Font
 	StartKey    glfw.Key // they key that, when pressed, will display the StartMenu
 	StartMenu   string   // the name passed to each NewMenu call
 	Menus       map[string]*Menu
@@ -159,7 +159,7 @@ func (mm *MenuManager) SetText(name string, index int, text string) error {
 }
 
 // NewMenuManager handles a tree of menus that interact with one another
-func NewMenuManager(font *gltext.Font, startKey glfw.Key, startMenu string) *MenuManager {
+func NewMenuManager(font *v41.Font, startKey glfw.Key, startMenu string) *MenuManager {
 	mm := &MenuManager{Font: font, StartKey: startKey, StartMenu: startMenu}
 	mm.Menus = make(map[string]*Menu)
 	return mm

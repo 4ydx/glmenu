@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/4ydx/glmenu"
 	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"golang.org/x/image/math/fixed"
@@ -90,8 +91,14 @@ func main() {
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	fmt.Println("Opengl version", version)
 
-	font, err := gltext.LoadTruetype("fontconfigs")
+	var font *v41.Font
+	config, err := gltext.LoadTruetypeFontConfig("fontconfigs")
+
 	if err == nil {
+		font, err = v41.NewFont(config)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Println("Font loaded from disk...")
 	} else {
 		fd, err := os.Open("font/luximr.ttf")
@@ -105,11 +112,16 @@ func main() {
 		runeRanges = append(runeRanges, gltext.RuneRange{Low: 1, High: 128})
 
 		scale := fixed.Int26_6(25)
-		font, err = gltext.NewTruetype(fd, scale, runeRanges, runesPerRow)
+
+		config, err = gltext.NewTruetypeFontConfig(fd, scale, runeRanges, runesPerRow)
 		if err != nil {
 			panic(err)
 		}
-		err = font.Config.Save("fontconfigs")
+		err = config.Save("fontconfigs")
+		if err != nil {
+			panic(err)
+		}
+		font, err = v41.NewFont(config)
 		if err != nil {
 			panic(err)
 		}

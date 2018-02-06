@@ -1,7 +1,7 @@
 package glmenu
 
 import (
-	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -42,8 +42,8 @@ type TextBoxInteraction func(
 
 type TextBox struct {
 	Menu               *Menu
-	Text               *gltext.Text
-	Cursor             *gltext.Text
+	Text               *v41.Text
+	Cursor             *v41.Text
 	CursorIndex        int   // position of the cursor within the text
 	CursorBarFrequency int64 // how long does each flash cycle last (visible -> invisible -> visible)
 	MaxLength          int
@@ -107,8 +107,8 @@ func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int3
 
 	// text
 	textbox.CursorBarFrequency = time.Duration.Nanoseconds(500000000)
-	textbox.Text = gltext.NewText(menu.Font, 1.0, 1.1)
-	textbox.Cursor = gltext.NewText(menu.Font, 1.0, 1.1)
+	textbox.Text = v41.NewText(menu.Font, 1.0, 1.1)
+	textbox.Cursor = v41.NewText(menu.Font, 1.0, 1.1)
 	textbox.Cursor.SetString("|")
 
 	// border formatting
@@ -123,7 +123,7 @@ func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int3
 	textbox.textBackground = mgl32.Vec3{0.0, 0.0, 0.0}
 
 	// create shader program and define attributes and uniforms
-	textbox.program, err = gltext.NewProgram(textboxVertexShader, textboxFragmentShader)
+	textbox.program, err = v41.NewProgram(textboxVertexShader, textboxFragmentShader)
 	if err != nil {
 		return err
 	}
@@ -435,11 +435,11 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
 	if inBox {
 		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.screenPositionOffset[0]))
-		if side == gltext.CSRight {
+		if side == v41.CSRight {
 			index++
 		}
 		// empty string
-		if side == gltext.CSUnknown {
+		if side == v41.CSUnknown {
 			index = 0
 		}
 		textbox.CursorIndex = index
