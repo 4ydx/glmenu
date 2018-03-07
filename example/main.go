@@ -92,7 +92,7 @@ func main() {
 	fmt.Println("Opengl version", version)
 
 	var font *v41.Font
-	config, err := gltext.LoadTruetypeFontConfig("fontconfigs")
+	config, err := gltext.LoadTruetypeFontConfig("fontconfigs", "luximr")
 
 	if err == nil {
 		font, err = v41.NewFont(config)
