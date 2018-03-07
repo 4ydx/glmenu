@@ -2,6 +2,7 @@ package glmenu
 
 import (
 	"github.com/4ydx/gltext"
+	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"runtime"
@@ -45,15 +46,15 @@ func TestTextBoxBackspace(t *testing.T) {
 
 	tb := TextBox{}
 
-	f := &gltext.Font{}
+	f := &v41.Font{}
 	f.Config = &gltext.FontConfig{}
 
-	text := &gltext.Text{}
+	text := &v41.Text{}
 	text.Font = f
 	text.SetString("testing")
 	tb.Text = text
 
-	text = &gltext.Text{}
+	text = &v41.Text{}
 	text.Font = f
 	text.SetString("|")
 	tb.Cursor = text
