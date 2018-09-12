@@ -117,7 +117,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		err = config.Save("fontconfigs")
+		err = config.Save("fontconfigs", "luximr")
 		if err != nil {
 			panic(err)
 		}
