@@ -22,6 +22,7 @@ func MenuInit(window *glfw.Window, font *v41.Font) {
 		Dimensions:      mgl32.Vec2{0, 0},
 		Padding:         mgl32.Vec2{10, 10},
 		HoverPadding:    mgl32.Vec2{10, 10},
+		TextScaleRate:   0.05,
 	}
 
 	// menu 1

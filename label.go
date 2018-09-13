@@ -59,7 +59,7 @@ func (label *Label) SetString(str string, argv ...interface{}) {
 	if len(argv) == 0 {
 		label.Text.SetString(str)
 	} else {
-		label.Text.SetString(str, argv)
+		label.Text.SetString(str, argv...)
 	}
 }
 

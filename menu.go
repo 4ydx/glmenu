@@ -81,6 +81,9 @@ type MenuDefaults struct {
 	Dimensions      mgl32.Vec2
 	Padding         mgl32.Vec2
 	HoverPadding    mgl32.Vec2
+
+	// increment during a scale operation
+	TextScaleRate float32
 }
 
 type Menu struct {
@@ -114,9 +117,6 @@ type Menu struct {
 	LastMousePosition mgl32.Vec2
 	NavigationVia     Navigation
 	NavigationIndex   int // once up/down arrows are pressed, determine which element needs to be entered/hovered over
-
-	// increment during a scale operation
-	TextScaleRate float32
 
 	// opengl oriented
 	ScreenPosition       ScreenPosition
@@ -263,13 +263,13 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label.OnHover = func(xPos, yPos float64, button MouseClick, inBox bool) {
 		if !label.IsClick {
 			label.Text.SetColor(menu.Defaults.TextHover)
-			label.Text.AddScale(menu.TextScaleRate)
+			label.Text.AddScale(menu.Defaults.TextScaleRate)
 		}
 	}
 	label.OnNotHover = func() {
 		if !label.IsClick {
 			label.Text.SetColor(menu.Defaults.TextColor)
-			label.Text.AddScale(-menu.TextScaleRate)
+			label.Text.AddScale(-menu.Defaults.TextScaleRate)
 		}
 	}
 	switch config.Action {
@@ -436,6 +436,7 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 	// this would probably require some changes though in order to track mouse movement.
 	width, height := window.GetSize()
 	menu := &Menu{
+		Name:           name,
 		Defaults:       defaults,
 		Font:           font,
 		IsVisible:      false,
@@ -445,10 +446,7 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 		Window:         window,
 		ScreenPosition: screenPosition,
 	}
-	//menu.Background = defaults.BackgroundColor
-	menu.TextScaleRate = 0.01 // 2DO: make this time dependent rather than fps dependent?
 	menu.ResizeWindow(float32(width), float32(height))
-	menu.Name = name
 
 	// reasonable default is to follow the first followable element when hitting enter i suppose
 	menu.OnEnterRelease = func() {
