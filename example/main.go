@@ -113,7 +113,7 @@ func main() {
 
 		scale := fixed.Int26_6(25)
 
-		config, err = gltext.NewTruetypeFontConfig(fd, scale, runeRanges, runesPerRow)
+		config, err = gltext.NewTruetypeFontConfig(fd, scale, runeRanges, runesPerRow, 5)
 		if err != nil {
 			panic(err)
 		}
