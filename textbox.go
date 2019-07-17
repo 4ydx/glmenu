@@ -458,6 +458,19 @@ func (textbox *TextBox) MoveCursor(offset int) {
 	}
 }
 
+func (textbox *TextBox) clicked(index int, xPos, yPos float64, button MouseClick, inBox bool) {
+	textbox.CursorIndex = index
+	textbox.ImmediateCursorDraw()
+	textbox.Cursor.SetPosition(mgl32.Vec2{
+		textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
+		textbox.Text.Position.Y(),
+	})
+	textbox.IsClick = true
+	if textbox.OnClick != nil {
+		textbox.OnClick(textbox, xPos, yPos, button, inBox)
+	}
+}
+
 // IsClicked handles click events
 func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	mX, mY := ScreenCoordToCenteredCoord(textbox.Menu.Font.WindowWidth, textbox.Menu.Font.WindowHeight, xPos, yPos)
@@ -471,18 +484,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 		if side == v41.CSUnknown {
 			index = 0
 		}
-		textbox.CursorIndex = index
-		textbox.ImmediateCursorDraw()
-
-		textbox.Cursor.SetPosition(
-			mgl32.Vec2{
-				textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
-				textbox.Text.Position.Y(),
-			})
-		textbox.IsClick = true
-		if textbox.OnClick != nil {
-			textbox.OnClick(textbox, xPos, yPos, button, inBox)
-		}
+		textbox.clicked(index, xPos, yPos, button, inBox)
 	} else {
 		textbox.IsEdit = false
 	}
@@ -507,7 +509,7 @@ func (textbox *TextBox) IsReleased(xPos, yPos float64, button MouseClick) {
 func (textbox *TextBox) NavigateTo() {
 	if !textbox.IsEdit {
 		point := textbox.InsidePoint()
-		textbox.IsClicked(float64(point.X), float64(point.Y), MouseLeft)
+		textbox.clicked(len(textbox.Text.String), float64(point.X), float64(point.Y), MouseLeft, true)
 		textbox.IsReleased(float64(point.X), float64(point.Y), MouseLeft)
 	}
 }
