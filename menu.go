@@ -12,11 +12,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type Point struct {
-	X, Y float32
-}
-
-var vertexShaderSource string = `
+var vertexShaderSource = `
 #version 330
 
 uniform mat4 scale_matrix;
@@ -31,7 +27,7 @@ void main() {
 }
 ` + "\x00"
 
-var fragmentShaderSource string = `
+var fragmentShaderSource = `
 #version 330
 
 uniform vec4 background;
@@ -42,37 +38,65 @@ void main() {
 }
 ` + "\x00"
 
+// MouseClick is a type of mouseclick
 type MouseClick int
+
+// Navigation is a type of navigation
 type Navigation int
+
+// Alignment is the alignment of a menu
 type Alignment int
+
+// ScreenPosition indicates a default position for a menu
+// The screen is segmented into 9 pieces (3x3)
 type ScreenPosition int
 
 const (
+	// MouseUnclicked is mouse unclicked
 	MouseUnclicked MouseClick = iota
+	// MouseLeft is the left mouse button
 	MouseLeft
+	// MouseRight is the right mouse button
 	MouseRight
+	// MouseCenter is the center mouse button
 	MouseCenter
 
-	NavigationMouse Navigation = 0
-	NavigationKey              = 1
+	// NavigationMouse indicates navigation via mouse
+	NavigationMouse Navigation = iota
+	// NavigationKey indicates navigation via arrow keys
+	NavigationKey
 
-	AlignCenter Alignment = 0
-	AlignRight            = 1
-	AlignLeft             = 2
+	// AlignCenter aligns vertically
+	AlignCenter Alignment = iota
+	// AlignRight aligns vertically to the right
+	AlignRight
+	// AlignLeft aligns vertically to the left
+	AlignLeft
 
-	ScreenCenter      ScreenPosition = 0
-	ScreenTopLeft                    = 1
-	ScreenTopCenter                  = 2
-	ScreenTopRight                   = 3
-	ScreenLeft                       = 4
-	ScreenRight                      = 5
-	ScreenLowerLeft                  = 6
-	ScreenLowerCenter                = 7
-	ScreenLowerRight                 = 8
+	// ScreenCenter is the center of the screen
+	ScreenCenter ScreenPosition = iota
+	// ScreenTopLeft is the top left
+	ScreenTopLeft
+	// ScreenTopCenter is the top center
+	ScreenTopCenter
+	// ScreenTopRight is the top right
+	ScreenTopRight
+	// ScreenLeft is the center left
+	ScreenLeft
+	// ScreenRight is the center right
+	ScreenRight
+	// ScreenLowerLeft is the lower left
+	ScreenLowerLeft
+	// ScreenLowerCenter is the lower center
+	ScreenLowerCenter
+	// ScreenLowerRight is the lower right
+	ScreenLowerRight
 
+	// ScreenPadding creates a padded border when positioning
 	ScreenPadding = float32(10) // used by screen positioning calculations
 )
 
+// MenuDefaults are menu defaults
 type MenuDefaults struct {
 	TextColor       mgl32.Vec3
 	TextHover       mgl32.Vec3
@@ -88,6 +112,7 @@ type MenuDefaults struct {
 	TextScaleRate float32
 }
 
+// Menu is menu that can be rendered
 type Menu struct {
 	// parent MenuManager
 	*MenuManager
@@ -106,7 +131,7 @@ type Menu struct {
 	Height                float32
 	Width                 float32
 	IsAutoCenter          bool
-	lowerLeft, upperRight Point
+	lowerLeft, upperRight gltext.Point
 
 	// interactive objects
 	Font       *v41.Font
@@ -143,6 +168,7 @@ type Menu struct {
 	eboIndexCount int
 }
 
+// Drag the menu
 func (menu *Menu) Drag(x, y float32) {
 	menu.screenPositionOffset[0] += x
 	menu.screenPositionOffset[1] += y
@@ -155,9 +181,10 @@ func (menu *Menu) Drag(x, y float32) {
 	}
 }
 
+// Finalize the menu once the menu has been defined
 func (menu *Menu) Finalize(align Alignment) {
-	glfloat_size := 4
-	glint_size := 4
+	glfloatSize := 4
+	glintSize := 4
 
 	menu.format(align)
 	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
@@ -187,10 +214,10 @@ func (menu *Menu) Finalize(align Alignment) {
 	gl.BindVertexArray(menu.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, menu.vbo)
 	gl.BufferData(
-		gl.ARRAY_BUFFER, glfloat_size*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
+		gl.ARRAY_BUFFER, glfloatSize*menu.vboIndexCount, gl.Ptr(menu.vboData), gl.DYNAMIC_DRAW)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, menu.ebo)
 	gl.BufferData(
-		gl.ELEMENT_ARRAY_BUFFER, glint_size*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
+		gl.ELEMENT_ARRAY_BUFFER, glintSize*menu.eboIndexCount, gl.Ptr(menu.eboData), gl.DYNAMIC_DRAW)
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
@@ -409,18 +436,24 @@ func (menu *Menu) format(align Alignment) {
 }
 
 // NewTextBox handles vertical spacing
-func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int32) *TextBox {
+func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int32) (*TextBox, error) {
 	textbox := &TextBox{}
-	textbox.Load(menu, width, height, borderWidth)
+	err := textbox.Load(menu, width, height, borderWidth)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 	textbox.SetString(str)
 	textbox.SetColor(menu.Defaults.TextColor)
 	textbox.Text.SetScale(1)
 
 	menu.TextBoxes = append(menu.TextBoxes, textbox)
 	menu.Formatable = append(menu.Formatable, textbox)
-	return textbox
+
+	return textbox, nil
 }
 
+// Show the menu
 func (menu *Menu) Show() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
@@ -433,6 +466,7 @@ func (menu *Menu) Show() {
 	}
 }
 
+// Hide the menu
 func (menu *Menu) Hide() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
@@ -440,6 +474,7 @@ func (menu *Menu) Hide() {
 	menu.IsVisible = false
 }
 
+// Toggle the menu
 func (menu *Menu) Toggle() {
 	for i := range menu.Labels {
 		menu.Labels[i].Reset()
@@ -531,7 +566,7 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 	return menu, nil
 }
 
-func (menu *Menu) makeBufferData(lowerLeft Point) {
+func (menu *Menu) makeBufferData(lowerLeft gltext.Point) {
 	// index (0,0)
 	menu.vboData[0] = lowerLeft.X // position
 	menu.vboData[1] = lowerLeft.Y
@@ -556,6 +591,7 @@ func (menu *Menu) makeBufferData(lowerLeft Point) {
 	menu.eboData[5] = 3
 }
 
+// Release opengl menu objects
 func (menu *Menu) Release() {
 	gl.DeleteBuffers(1, &menu.vbo)
 	gl.DeleteBuffers(1, &menu.ebo)
@@ -568,6 +604,7 @@ func (menu *Menu) Release() {
 	}
 }
 
+// Draw the menu
 func (menu *Menu) Draw() bool {
 	if !menu.MenuManager.IsFinalized {
 		panic(fmt.Sprintf("menu %s's MenuManager must be finalized prior to drawing!", menu.Name))
@@ -613,6 +650,7 @@ func (menu *Menu) Draw() bool {
 	return menu.IsVisible
 }
 
+// MouseClick on the menu
 func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
 		return
@@ -629,8 +667,13 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// MouseRelease processed potential mouse release over the menu
 func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
+		return
+	}
+	mX, mY := ScreenCoordToCenteredCoord(menu.Font.WindowWidth, menu.Font.WindowHeight, xPos, yPos)
+	if inBox := InBox(mX, mY, menu); !inBox {
 		return
 	}
 	for i := range menu.Labels {
@@ -641,8 +684,13 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// MouseHover processes potential mouse hover over the menu
 func (menu *Menu) MouseHover(xPos, yPos float64) {
 	if !menu.IsVisible {
+		return
+	}
+	mX, mY := ScreenCoordToCenteredCoord(menu.Font.WindowWidth, menu.Font.WindowHeight, xPos, yPos)
+	if inBox := InBox(mX, mY, menu); !inBox {
 		return
 	}
 	dist := math.Sqrt(math.Pow(float64(menu.LastMousePosition[0])-xPos, 2) + math.Pow(float64(menu.LastMousePosition[1])-yPos, 2))
@@ -665,6 +713,7 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	}
 }
 
+// KeyRelease processes a key release
 func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 	if key == glfw.KeyUp || key == glfw.KeyDown {
 		for i := range menu.Formatable {
@@ -675,9 +724,9 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 		// adjust endpoints skipping objects that are NOOP
 		for {
 			if key == glfw.KeyUp {
-				menu.NavigationIndex -= 1
+				menu.NavigationIndex--
 			} else {
-				menu.NavigationIndex += 1
+				menu.NavigationIndex++
 			}
 			if menu.NavigationIndex < 0 || menu.NavigationIndex == len(menu.Formatable) || !menu.Formatable[menu.NavigationIndex].IsNoop() {
 				if menu.NavigationIndex < -1 {
@@ -710,7 +759,7 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 			menu.NavigationIndex = 0
 		}
 		if menu.NavigationIndex == len(menu.Formatable) {
-			menu.NavigationIndex -= 1
+			menu.NavigationIndex--
 		}
 
 		// perform necessary visual changes as we navigate to the next place
@@ -729,6 +778,7 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 	}
 }
 
+// GetBoundingBox gets the bounding box of the menu
 func (menu *Menu) GetBoundingBox() (X1, X2 gltext.Point) {
 	x, y := menu.screenPositionOffset.X(), menu.screenPositionOffset.Y()
 

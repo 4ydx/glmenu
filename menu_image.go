@@ -1,9 +1,11 @@
 package glmenu
 
 import (
+	"github.com/4ydx/gltext"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// MenuImage - not yet complete
 type MenuImage struct {
 	MenuTexture      *MenuTexture
 	MenuTextureIndex int
@@ -25,9 +27,9 @@ type MenuImage struct {
 
 	// X1, X2: the lower left and upper right points of a box that bounds the text with a center point (0,0)
 	// lower left
-	X1 Point
+	X1 gltext.Point
 	// upper right
-	X2 Point
+	X2 gltext.Point
 
 	// Screen position away from center
 	Position mgl32.Vec2

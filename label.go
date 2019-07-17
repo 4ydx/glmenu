@@ -1,6 +1,7 @@
 package glmenu
 
 import (
+	"github.com/4ydx/gltext"
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -89,7 +90,7 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 }
 
 // InsidePoint returns a SCREEN COORDINATE SYSTEM point that is centered inside the label
-func (label *Label) InsidePoint() (P Point) {
+func (label *Label) InsidePoint() (P gltext.Point) {
 	// get the center point
 	lowerLeft, upperRight := label.Text.GetBoundingBox()
 	x := (upperRight.X + lowerLeft.X) / 2

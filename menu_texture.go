@@ -10,7 +10,7 @@ import (
 	"image"
 )
 
-var menuTextureVertexShaderSource string = `
+var menuTextureVertexShaderSource = `
 #version 330
 
 uniform mat4 orthographic_matrix;
@@ -28,7 +28,7 @@ void main() {
 }
 ` + "\x00"
 
-var menuTextureFragmentShaderSource string = `
+var menuTextureFragmentShaderSource = `
 #version 330
 
 uniform sampler2D fragment_texture;
@@ -43,6 +43,7 @@ void main() {
 }
 ` + "\x00"
 
+// MenuTexture - not yet complete
 type MenuTexture struct {
 	Menu *Menu
 
@@ -72,12 +73,14 @@ type MenuTexture struct {
 	Image *image.NRGBA
 }
 
+// ResizeWindow handles a window resize
 func (mt *MenuTexture) ResizeWindow(width float32, height float32) {
 	mt.WindowWidth = width
 	mt.WindowHeight = height
 	mt.OrthographicMatrix = mgl32.Ortho2D(-mt.WindowWidth/2, mt.WindowWidth/2, -mt.WindowHeight/2, mt.WindowHeight/2)
 }
 
+// Release opengl objects
 func (mt *MenuTexture) Release() {
 	gl.DeleteTextures(1, &mt.textureID)
 }

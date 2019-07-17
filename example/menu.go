@@ -31,7 +31,10 @@ func MenuInit(window *glfw.Window, font *v41.Font) {
 		fmt.Println("error loading the font")
 		os.Exit(1)
 	}
-	textbox := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
+	textbox, err := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
+	if err != nil {
+		panic(err)
+	}
 	textbox.Text.MaxRuneCount = 16
 	mainMenu.NewLabel("Options", glmenu.LabelConfig{Action: glmenu.GotoMenu, Goto: "option"})
 	mainMenu.NewLabel("Dummy", glmenu.LabelConfig{Action: glmenu.Noop})

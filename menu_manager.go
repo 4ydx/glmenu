@@ -8,6 +8,8 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
+// MenuManager handles ineraction between related menus (navigation)
+// as well as performing other conveniences
 type MenuManager struct {
 	Font        *v41.Font
 	StartKey    glfw.Key // they key that, when pressed, will display the StartMenu
@@ -44,6 +46,7 @@ func (mm *MenuManager) Finalize(align Alignment) error {
 	return nil
 }
 
+// IsVisible returns true when one of the menus is visible
 func (mm *MenuManager) IsVisible() bool {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
@@ -53,7 +56,7 @@ func (mm *MenuManager) IsVisible() bool {
 	return false
 }
 
-// Clicked resolves menus that have been clicked
+// MouseClick processes potential menus clicks
 func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
 	yPos = float64(mm.Font.WindowHeight) - yPos
 
@@ -65,6 +68,7 @@ func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// MouseRelease processes potential mouse releases
 func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
 	yPos = float64(mm.Font.WindowHeight) - yPos
 
@@ -76,6 +80,7 @@ func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// MouseHover processes potential mouse hover events
 func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	yPos = float64(mm.Font.WindowHeight) - yPos
 
@@ -87,6 +92,7 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	}
 }
 
+// KeyRelease handles key release events
 func (mm *MenuManager) KeyRelease(key glfw.Key, withShift bool) {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
@@ -96,6 +102,7 @@ func (mm *MenuManager) KeyRelease(key glfw.Key, withShift bool) {
 	}
 }
 
+// Draw the visible menu
 func (mm *MenuManager) Draw() bool {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
@@ -108,12 +115,14 @@ func (mm *MenuManager) Draw() bool {
 	return false
 }
 
+// Release opengl objects in all managed menus
 func (mm *MenuManager) Release() {
 	for _, menu := range mm.Menus {
 		menu.Release()
 	}
 }
 
+// NewMenu creates a new managed menu
 func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults MenuDefaults, screenPosition ScreenPosition) (*Menu, error) {
 	m, err := NewMenu(window, name, mm.Font, menuDefaults, screenPosition)
 	if err != nil {
@@ -122,40 +131,47 @@ func (mm *MenuManager) NewMenu(window *glfw.Window, name string, menuDefaults Me
 	m.MenuManager = mm
 
 	if _, ok := mm.Menus[name]; ok {
-		return nil, errors.New(fmt.Sprintf("The named menu %s already exists.", name))
+		return nil, fmt.Errorf("the named menu %s already exists", name)
 	}
 	mm.Menus[name] = m
 	return m, nil
 }
 
+// Hide all menus
 func (mm *MenuManager) Hide() {
 	for _, m := range mm.Menus {
 		m.Hide()
 	}
 }
 
+// Show the requested menu
 func (mm *MenuManager) Show(name string) error {
 	m, ok := mm.Menus[name]
 	if !ok {
-		return errors.New(fmt.Sprintf("The named menu '%s' doesn't exists.", name))
+		return fmt.Errorf("the named menu '%s' doesn't exists", name)
 	}
 	m.Show()
 	return nil
 }
 
+// Toggle the named menu
 func (mm *MenuManager) Toggle(name string) error {
 	m, ok := mm.Menus[name]
 	if !ok {
-		return errors.New(fmt.Sprintf("The named menu '%s' doesn't exists.", name))
+		return fmt.Errorf("the named menu '%s' doesn't exists", name)
 	}
 	m.Toggle()
 	return nil
 }
 
+// SetText for the label at the given index of the named menu
 func (mm *MenuManager) SetText(name string, index int, text string) error {
 	m, ok := mm.Menus[name]
 	if !ok {
-		return errors.New(fmt.Sprintf("The named menu '%s' doesn't exists.", name))
+		return fmt.Errorf("the named menu '%s' doesn't exists", name)
+	}
+	if index < 0 || index >= len(m.Labels) {
+		return fmt.Errorf("the index '%d' does not exist", index)
 	}
 	for i, l := range m.Labels {
 		if i == index {
