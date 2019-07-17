@@ -100,13 +100,13 @@ type Menu struct {
 	OnEnterRelease func()
 
 	// options
-	Defaults     MenuDefaults
-	IsVisible    bool
-	ShowOnKey    glfw.Key
-	Height       float32
-	Width        float32
-	IsAutoCenter bool
-	lowerLeft    Point
+	Defaults              MenuDefaults
+	IsVisible             bool
+	ShowOnKey             glfw.Key
+	Height                float32
+	Width                 float32
+	IsAutoCenter          bool
+	lowerLeft, upperRight Point
 
 	// interactive objects
 	Font       *v41.Font
@@ -146,8 +146,10 @@ type Menu struct {
 func (menu *Menu) Drag(x, y float32) {
 	menu.screenPositionOffset[0] += x
 	menu.screenPositionOffset[1] += y
+
 	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
 	menu.finalPosition[1] = menu.screenPositionOffset.Y() / (menu.Font.WindowHeight / 2)
+
 	for _, l := range menu.Formatable {
 		l.DragPosition(x, y)
 	}
@@ -158,10 +160,19 @@ func (menu *Menu) Finalize(align Alignment) {
 	glint_size := 4
 
 	menu.format(align)
-	menu.lowerLeft = menu.findCenter()
 	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
 	menu.finalPosition[1] = menu.screenPositionOffset.Y() / (menu.Font.WindowHeight / 2)
-	menu.makeBufferData()
+
+	// center the menu around (0,0)
+	menuWidthHalf := menu.Width / 2
+	menuHeightHalf := menu.Height / 2
+	menu.lowerLeft.X = -menuWidthHalf
+	menu.lowerLeft.Y = -menuHeightHalf
+	menu.upperRight.X = menuWidthHalf
+	menu.upperRight.Y = menuHeightHalf
+
+	// create the vbo data based on the a centered draw
+	menu.makeBufferData(menu.lowerLeft)
 
 	menu.scaleIdent4 = mgl32.Ident4()
 
@@ -260,7 +271,7 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 	label.Text.SetScale(1)
 	label.Text.SetColor(menu.Defaults.TextColor)
 
-	if config.Action == NOOP {
+	if config.Action == Noop {
 		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {}
 		return label
 	}
@@ -281,13 +292,13 @@ func (menu *Menu) NewLabel(str string, config LabelConfig) *Label {
 		}
 	}
 	switch config.Action {
-	case EXIT_MENU:
+	case ExitMenu:
 		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 			if inBox {
 				menu.Hide()
 			}
 		}
-	case EXIT_GAME:
+	case ExitGame:
 		label.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 			if inBox {
 				menu.Window.SetShouldClose(true)
@@ -327,6 +338,7 @@ func (menu *Menu) format(align Alignment) {
 	}
 
 	// calculate an appropriate offset based on the screen position that was requested
+	// the calculation is based on (0,0) being at the CENTER OF THE SCREEN
 	switch menu.ScreenPosition {
 	case ScreenTopLeft:
 		menu.screenPositionOffset[0] = -(menu.Font.WindowWidth/2 - menu.Width/2) + ScreenPadding
@@ -519,22 +531,22 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 	return menu, nil
 }
 
-func (menu *Menu) makeBufferData() {
+func (menu *Menu) makeBufferData(lowerLeft Point) {
 	// index (0,0)
-	menu.vboData[0] = menu.lowerLeft.X // position
-	menu.vboData[1] = menu.lowerLeft.Y
+	menu.vboData[0] = lowerLeft.X // position
+	menu.vboData[1] = lowerLeft.Y
 
 	// index (1,0)
-	menu.vboData[2] = menu.lowerLeft.X + menu.Width
-	menu.vboData[3] = menu.lowerLeft.Y
+	menu.vboData[2] = lowerLeft.X + menu.Width
+	menu.vboData[3] = lowerLeft.Y
 
 	// index (1,1)
-	menu.vboData[4] = menu.lowerLeft.X + menu.Width
-	menu.vboData[5] = menu.lowerLeft.Y + menu.Height
+	menu.vboData[4] = lowerLeft.X + menu.Width
+	menu.vboData[5] = lowerLeft.Y + menu.Height
 
 	// index (0,1)
-	menu.vboData[6] = menu.lowerLeft.X
-	menu.vboData[7] = menu.lowerLeft.Y + menu.Height
+	menu.vboData[6] = lowerLeft.X
+	menu.vboData[7] = lowerLeft.Y + menu.Height
 
 	menu.eboData[0] = 0
 	menu.eboData[1] = 1
@@ -605,7 +617,10 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
 		return
 	}
-	yPos = float64(menu.Font.WindowHeight) - yPos
+	mX, mY := ScreenCoordToCenteredCoord(menu.Font.WindowWidth, menu.Font.WindowHeight, xPos, yPos)
+	if inBox := InBox(mX, mY, menu); !inBox {
+		return
+	}
 	for i := range menu.Labels {
 		menu.Labels[i].IsClicked(xPos, yPos, button)
 	}
@@ -618,7 +633,6 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
 		return
 	}
-	yPos = float64(menu.Font.WindowHeight) - yPos
 	for i := range menu.Labels {
 		menu.Labels[i].IsReleased(xPos, yPos, button)
 	}
@@ -634,6 +648,7 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 	dist := math.Sqrt(math.Pow(float64(menu.LastMousePosition[0])-xPos, 2) + math.Pow(float64(menu.LastMousePosition[1])-yPos, 2))
 	menu.LastMousePosition[0] = float32(xPos)
 	menu.LastMousePosition[1] = float32(yPos)
+
 	if dist > 1 {
 		// a bit of mouse movement will reenable mouse position evaluation
 		menu.NavigationVia = NavigationMouse
@@ -643,21 +658,11 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 		menu.Formatable[menu.NavigationIndex].NavigateTo()
 		return
 	}
-	yPos = float64(menu.Font.WindowHeight) - yPos
 	for i := range menu.Labels {
 		if menu.Labels[i].OnHover != nil {
 			menu.Labels[i].IsHovered(xPos, yPos)
 		}
 	}
-}
-
-func (menu *Menu) findCenter() (lowerLeft Point) {
-	menuWidthHalf := menu.Width / 2
-	menuHeightHalf := menu.Height / 2
-
-	lowerLeft.X = -menuWidthHalf
-	lowerLeft.Y = -menuHeightHalf
-	return
 }
 
 func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
@@ -722,4 +727,15 @@ func (menu *Menu) KeyRelease(key glfw.Key, withShift bool) {
 	if menu.OnEnterRelease != nil && key == glfw.KeyEnter {
 		menu.OnEnterRelease()
 	}
+}
+
+func (menu *Menu) GetBoundingBox() (X1, X2 gltext.Point) {
+	x, y := menu.screenPositionOffset.X(), menu.screenPositionOffset.Y()
+
+	X1.X = menu.lowerLeft.X + x
+	X1.Y = menu.lowerLeft.Y + y
+
+	X2.X = menu.upperRight.X + x
+	X2.Y = menu.upperRight.Y + y
+	return
 }

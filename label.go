@@ -5,27 +5,35 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// LabelAction is a predefined action a label can perform
 type LabelAction int
 
 const (
-	NOOP LabelAction = iota
-	GOTO_MENU
-	EXIT_MENU
-	EXIT_GAME
+	// Noop does nothing
+	Noop LabelAction = iota
+	// GotoMenu goes to a given menu
+	GotoMenu
+	// ExitMenu closes the current menu
+	ExitMenu
+	// ExitGame closes the game
+	ExitGame
 )
 
+// LabelConfig is the config for a label
 type LabelConfig struct {
 	Padding Padding
 	Action  LabelAction
 	Goto    string
 }
 
+// LabelInteraction allows the user to define what happens when a label is interacted with
 type LabelInteraction func(
 	xPos, yPos float64,
 	button MouseClick,
 	isInBoundingBox bool,
 )
 
+// Label is text that can be interacted with
 type Label struct {
 	Config  LabelConfig
 	Menu    *Menu
@@ -43,18 +51,23 @@ type Label struct {
 	OnNotHover    func()
 }
 
+// Reset the text to the original size
 func (label *Label) Reset() {
 	label.Text.SetScale(label.Text.ScaleMin)
 }
 
+// GetPosition returns the label's position
+// This is in pixels with the origin at the center of the screen
 func (label *Label) GetPosition() mgl32.Vec2 {
 	return label.Text.Position
 }
 
+// GetPadding returns the padding for the label
 func (label *Label) GetPadding() Padding {
 	return label.Config.Padding
 }
 
+// SetString sets the label's text string
 func (label *Label) SetString(str string, argv ...interface{}) {
 	if len(argv) == 0 {
 		label.Text.SetString(str)
@@ -63,32 +76,10 @@ func (label *Label) SetString(str string, argv ...interface{}) {
 	}
 }
 
-func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
-	if label.Menu != nil && label.Text != nil {
-		x1, x2 := label.Text.GetBoundingBox()
-		X1.X = x1.X + label.Menu.Font.WindowWidth/2
-		X1.Y = x1.Y + label.Menu.Font.WindowHeight/2
-
-		X2.X = x2.X + label.Menu.Font.WindowWidth/2
-		X2.Y = x2.Y + label.Menu.Font.WindowHeight/2
-	} else {
-		if label.Menu == nil {
-			MenuDebug("Uninitialized Menu Object")
-		}
-		if label.Text == nil {
-			MenuDebug("Uninitialized Text Object")
-		}
-	}
-	return
-}
-
 // IsClicked uses a bounding box to determine clicks
 func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
-	// menu rendering (and text) is positioned in orthographic projection coordinates
-	// but click positions are based on window coordinates
-	// we have to transform them
-	X1, X2 := label.OrthoToScreenCoord()
-	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	mX, mY := ScreenCoordToCenteredCoord(label.Menu.Font.WindowWidth, label.Menu.Font.WindowHeight, xPos, yPos)
+	inBox := InBox(mX, mY, label.Text)
 	if inBox {
 		label.IsClick = true
 		if label.OnClick != nil {
@@ -97,20 +88,28 @@ func (label *Label) IsClicked(xPos, yPos float64, button MouseClick) {
 	}
 }
 
-// InsidePoint returns a point nearby the center of the label
-// Used to locate a screen position where clicking can be simulated
+// InsidePoint returns a SCREEN COORDINATE SYSTEM point that is centered inside the label
 func (label *Label) InsidePoint() (P Point) {
-	X1, X2 := label.OrthoToScreenCoord()
-	P.X = (X2.X-X1.X)/2 + X1.X
-	P.Y = (X2.Y-X1.Y)/2 + X1.Y
+	// get the center point
+	lowerLeft, upperRight := label.Text.GetBoundingBox()
+	x := (upperRight.X + lowerLeft.X) / 2
+	y := (upperRight.Y + lowerLeft.Y) / 2
+
+	// transform to screen coordinates
+	// - recall that (0,0) is the upper left hand corner of the screen
+	// - for the x axis we only need to shift everything to the right
+	// - for the y axis since positive points down we have to invert the existing value first
+	P.X = x + label.Menu.Font.WindowWidth/2
+	P.Y = -y + label.Menu.Font.WindowHeight/2
 	return
 }
 
 // IsReleased is checked for all labels in a menu when mouseup occurs
 func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
-	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
-	X1, X2 := label.OrthoToScreenCoord()
-	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	mX, mY := ScreenCoordToCenteredCoord(label.Menu.Font.WindowWidth, label.Menu.Font.WindowHeight, xPos, yPos)
+	inBox := InBox(mX, mY, label.Text)
+
+	// anything flagged as clicked now needs to decide whether to execute its logic based on inX && inY
 	if label.IsClick {
 		if label.IsHover {
 			label.Text.SetColor(label.Menu.Defaults.TextHover)
@@ -130,34 +129,41 @@ func (label *Label) IsReleased(xPos, yPos float64, button MouseClick) {
 
 // IsHovered uses a bounding box
 func (label *Label) IsHovered(xPos, yPos float64) {
-	X1, X2 := label.OrthoToScreenCoord()
-	inBox := float32(xPos) > X1.X && float32(xPos) < X2.X && float32(yPos) > X1.Y && float32(yPos) < X2.Y
+	mX, mY := ScreenCoordToCenteredCoord(label.Menu.Font.WindowWidth, label.Menu.Font.WindowHeight, xPos, yPos)
+	inBox := InBox(mX, mY, label.Text)
 	label.IsHover = inBox
 	if inBox {
 		label.OnHover(xPos, yPos, MouseUnclicked, inBox)
 	}
 }
 
+// Draw the label
 func (label *Label) Draw() {
 	label.Text.Draw()
 }
 
+// SetPosition of the label's text
 func (label *Label) SetPosition(v mgl32.Vec2) {
 	label.Text.SetPosition(v)
 }
 
+// DragPosition drags the label along the vector (x,y)
 func (label *Label) DragPosition(x, y float32) {
 	label.Text.DragPosition(x, y)
 }
 
+// Height returns the text height
 func (label *Label) Height() float32 {
 	return label.Text.Height()
 }
 
+// Width returns the text width
 func (label *Label) Width() float32 {
 	return label.Text.Width()
 }
 
+// NavigateTo activates the given label
+// Used when arrow keys are used to navigate a menu
 func (label *Label) NavigateTo() {
 	point := label.InsidePoint()
 	if label.OnHover != nil {
@@ -175,6 +181,7 @@ func (label *Label) NavigateAway() bool {
 	return false
 }
 
+// Follow the label by performing a click/release sequence
 func (label *Label) Follow() bool {
 	if label.IsHover {
 		point := label.InsidePoint()
@@ -185,10 +192,12 @@ func (label *Label) Follow() bool {
 	return false
 }
 
+// IsNoop indicates if the label is a noop
 func (label *Label) IsNoop() bool {
-	return label.Config.Action == NOOP
+	return label.Config.Action == Noop
 }
 
+// Type returns the kind of this object
 func (label *Label) Type() FormatableType {
 	return FormatableLabel
 }

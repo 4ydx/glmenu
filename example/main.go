@@ -68,14 +68,14 @@ func main() {
 	glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
 
 	// fullscreen
-	primary := glfw.GetPrimaryMonitor()
-	vm := primary.GetVideoMode()
-	w, h := vm.Width, vm.Height // you should probably pick one in another manner
-	window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
+	//primary := glfw.GetPrimaryMonitor()
+	//vm := primary.GetVideoMode()
+	//w, h := vm.Width, vm.Height // you should probably pick one in another manner
+	//window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
 	// fullscreen
 
 	// windowed
-	// window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
+	window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
 	// windowed
 
 	if err != nil {
@@ -139,7 +139,7 @@ func main() {
 		xPos, yPos := window.GetCursorPos()
 		menuManager.MouseHover(xPos, yPos)
 		if menuManager.Draw() {
-			menuManager.Menus["main"].Drag(1, 0)
+			// menuManager.Menus["main"].Drag(1, 0)
 			// pause gameplay
 		} else {
 			// play game

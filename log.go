@@ -7,25 +7,16 @@ import (
 	"runtime"
 )
 
+// IsDebug when set to true outputs debug logging information
 var IsDebug = false
 
-type MenuLogger struct {
-	*log.Logger
-}
-
-func NewMenuLogger(location string) (*MenuLogger, error) {
+func NewMenuLogger(location string) (*log.Logger, error) {
 	f, err := os.OpenFile(location, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0660)
 	if err != nil {
 		return nil, err
 	}
-	mn := &MenuLogger{
-		Logger: log.New(f, "", log.Lshortfile),
-	}
+	mn := log.New(f, "", log.Lshortfile)
 	return mn, nil
-}
-
-func (nm *MenuLogger) Close() error {
-	return nm.Close()
 }
 
 func MenuDebug(message string) {

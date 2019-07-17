@@ -3,6 +3,7 @@ package glmenu
 import (
 	"errors"
 	"fmt"
+
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -24,7 +25,7 @@ func (mm *MenuManager) Finalize(align Alignment) error {
 	for _, menu := range mm.Menus {
 		menu.Finalize(align)
 		for _, label := range menu.Labels {
-			if label.Config.Action == GOTO_MENU {
+			if label.Config.Action == GotoMenu {
 				gotoMenu, ok := mm.Menus[label.Config.Goto]
 				if ok {
 					func(from *Menu, to *Menu, l *Label) {
@@ -54,6 +55,8 @@ func (mm *MenuManager) IsVisible() bool {
 
 // Clicked resolves menus that have been clicked
 func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
+	yPos = float64(mm.Font.WindowHeight) - yPos
+
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseClick(xPos, yPos, button)
@@ -63,6 +66,8 @@ func (mm *MenuManager) MouseClick(xPos, yPos float64, button MouseClick) {
 }
 
 func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
+	yPos = float64(mm.Font.WindowHeight) - yPos
+
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseRelease(xPos, yPos, button)
@@ -72,6 +77,8 @@ func (mm *MenuManager) MouseRelease(xPos, yPos float64, button MouseClick) {
 }
 
 func (mm *MenuManager) MouseHover(xPos, yPos float64) {
+	yPos = float64(mm.Font.WindowHeight) - yPos
+
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
 			menu.MouseHover(xPos, yPos)
