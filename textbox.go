@@ -355,6 +355,19 @@ func (textbox *TextBox) SetPosition(v mgl32.Vec2) {
 	textbox.Cursor.SetPosition(v)
 }
 
+func (textbox *TextBox) DragPosition(x, y float32) {
+	textbox.Position[0] += x
+	textbox.Position[1] += y
+
+	// transform to orthographic coordinates ranged -1 to 1 for the shader
+	textbox.finalPosition[0] = textbox.Position.X() / (textbox.Menu.Font.WindowWidth / 2)
+	textbox.finalPosition[1] = textbox.Position.Y() / (textbox.Menu.Font.WindowHeight / 2)
+
+	// used to build shadow data and for calling SetPosition again when needed
+	textbox.Text.DragPosition(x, y)
+	textbox.Cursor.DragPosition(x, y)
+}
+
 func (textbox *TextBox) GetBoundingBox() (X1, X2 Point) {
 	x, y := textbox.Position.X(), textbox.Position.Y()
 	X1.X = textbox.X1.X + x
@@ -386,11 +399,11 @@ func (textbox *TextBox) Backspace() {
 
 func (textbox *TextBox) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	x1, x2 := textbox.GetBoundingBox()
-	X1.X = x1.X + textbox.Menu.WindowWidth/2
-	X1.Y = x1.Y + textbox.Menu.WindowHeight/2
+	X1.X = x1.X + textbox.Menu.Font.WindowWidth/2
+	X1.Y = x1.Y + textbox.Menu.Font.WindowHeight/2
 
-	X2.X = x2.X + textbox.Menu.WindowWidth/2
-	X2.Y = x2.Y + textbox.Menu.WindowHeight/2
+	X2.X = x2.X + textbox.Menu.Font.WindowWidth/2
+	X2.Y = x2.Y + textbox.Menu.Font.WindowHeight/2
 	return
 }
 

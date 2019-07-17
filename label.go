@@ -66,11 +66,11 @@ func (label *Label) SetString(str string, argv ...interface{}) {
 func (label *Label) OrthoToScreenCoord() (X1 Point, X2 Point) {
 	if label.Menu != nil && label.Text != nil {
 		x1, x2 := label.Text.GetBoundingBox()
-		X1.X = x1.X + label.Menu.WindowWidth/2
-		X1.Y = x1.Y + label.Menu.WindowHeight/2
+		X1.X = x1.X + label.Menu.Font.WindowWidth/2
+		X1.Y = x1.Y + label.Menu.Font.WindowHeight/2
 
-		X2.X = x2.X + label.Menu.WindowWidth/2
-		X2.Y = x2.Y + label.Menu.WindowHeight/2
+		X2.X = x2.X + label.Menu.Font.WindowWidth/2
+		X2.Y = x2.Y + label.Menu.Font.WindowHeight/2
 	} else {
 		if label.Menu == nil {
 			MenuDebug("Uninitialized Menu Object")
@@ -144,6 +144,10 @@ func (label *Label) Draw() {
 
 func (label *Label) SetPosition(v mgl32.Vec2) {
 	label.Text.SetPosition(v)
+}
+
+func (label *Label) DragPosition(x, y float32) {
+	label.Text.DragPosition(x, y)
 }
 
 func (label *Label) Height() float32 {

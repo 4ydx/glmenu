@@ -27,6 +27,7 @@ type Formatable interface {
 	// rendering
 	GetPosition() mgl32.Vec2
 	SetPosition(v mgl32.Vec2)
+	DragPosition(x, y float32)
 	GetPadding() Padding
 	Height() float32
 	Width() float32

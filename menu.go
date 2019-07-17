@@ -1,13 +1,15 @@
 package glmenu
 
 import (
+	"fmt"
+	"image"
+	"math"
+
 	"github.com/4ydx/gltext"
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-	"image"
-	"math"
 )
 
 type Point struct {
@@ -122,8 +124,6 @@ type Menu struct {
 	ScreenPosition       ScreenPosition
 	screenPositionOffset mgl32.Vec2
 	Window               *glfw.Window
-	WindowWidth          float32
-	WindowHeight         float32
 	program              uint32 // shader program
 	backgroundUniform    int32
 	orthographicUniform  int32 // ortho matrix
@@ -143,16 +143,24 @@ type Menu struct {
 	eboIndexCount int
 }
 
+func (menu *Menu) Drag(x, y float32) {
+	menu.screenPositionOffset[0] += x
+	menu.screenPositionOffset[1] += y
+	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
+	menu.finalPosition[1] = menu.screenPositionOffset.Y() / (menu.Font.WindowHeight / 2)
+	for _, l := range menu.Formatable {
+		l.DragPosition(x, y)
+	}
+}
+
 func (menu *Menu) Finalize(align Alignment) {
 	glfloat_size := 4
 	glint_size := 4
 
 	menu.format(align)
 	menu.lowerLeft = menu.findCenter()
-	menu.finalPosition = mgl32.Vec2{
-		menu.screenPositionOffset.X() / (menu.WindowWidth / 2),
-		menu.screenPositionOffset.Y() / (menu.WindowHeight / 2),
-	}
+	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
+	menu.finalPosition[1] = menu.screenPositionOffset.Y() / (menu.Font.WindowHeight / 2)
 	menu.makeBufferData()
 
 	menu.scaleIdent4 = mgl32.Ident4()
@@ -319,34 +327,31 @@ func (menu *Menu) format(align Alignment) {
 	}
 
 	// calculate an appropriate offset based on the screen position that was requested
-	ww, wh := menu.Window.GetSize()
-	menu.WindowWidth = float32(ww)
-	menu.WindowHeight = float32(wh)
 	switch menu.ScreenPosition {
 	case ScreenTopLeft:
-		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
-		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.Font.WindowWidth/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.Font.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenLeft:
-		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.Font.WindowWidth/2 - menu.Width/2) + ScreenPadding
 		menu.screenPositionOffset[1] = 0
 	case ScreenLowerLeft:
-		menu.screenPositionOffset[0] = -(menu.WindowWidth/2 - menu.Width/2) + ScreenPadding
-		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[0] = -(menu.Font.WindowWidth/2 - menu.Width/2) + ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.Font.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	case ScreenTopCenter:
 		menu.screenPositionOffset[0] = 0
-		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.Font.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenLowerCenter:
 		menu.screenPositionOffset[0] = 0
-		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.Font.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	case ScreenTopRight:
-		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
-		menu.screenPositionOffset[1] = +(menu.WindowHeight/2 - menu.Height/2) - ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.Font.WindowWidth/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = +(menu.Font.WindowHeight/2 - menu.Height/2) - ScreenPadding
 	case ScreenRight:
-		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.Font.WindowWidth/2 - menu.Width/2) - ScreenPadding
 		menu.screenPositionOffset[1] = 0
 	case ScreenLowerRight:
-		menu.screenPositionOffset[0] = +(menu.WindowWidth/2 - menu.Width/2) - ScreenPadding
-		menu.screenPositionOffset[1] = -(menu.WindowHeight/2 - menu.Height/2) + ScreenPadding
+		menu.screenPositionOffset[0] = +(menu.Font.WindowWidth/2 - menu.Width/2) - ScreenPadding
+		menu.screenPositionOffset[1] = -(menu.Font.WindowHeight/2 - menu.Height/2) + ScreenPadding
 	}
 
 	// depending on the number of menu elements a vertically centered menus formatting will differ
@@ -446,7 +451,7 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 		Window:         window,
 		ScreenPosition: screenPosition,
 	}
-	menu.ResizeWindow(float32(width), float32(height))
+	menu.Font.ResizeWindow(float32(width), float32(height))
 
 	// reasonable default is to follow the first followable element when hitting enter i suppose
 	menu.OnEnterRelease = func() {
@@ -514,12 +519,6 @@ func NewMenu(window *glfw.Window, name string, font *v41.Font, defaults MenuDefa
 	return menu, nil
 }
 
-func (menu *Menu) ResizeWindow(width float32, height float32) {
-	menu.WindowWidth = width
-	menu.WindowHeight = height
-	menu.Font.ResizeWindow(width, height)
-}
-
 func (menu *Menu) makeBufferData() {
 	// index (0,0)
 	menu.vboData[0] = menu.lowerLeft.X // position
@@ -559,7 +558,7 @@ func (menu *Menu) Release() {
 
 func (menu *Menu) Draw() bool {
 	if !menu.MenuManager.IsFinalized {
-		panic("A menu manager must be finalized prior to drawing!")
+		panic(fmt.Sprintf("menu %s's MenuManager must be finalized prior to drawing!", menu.Name))
 	}
 	if !menu.IsVisible {
 		return menu.IsVisible
@@ -606,7 +605,7 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
 		return
 	}
-	yPos = float64(menu.WindowHeight) - yPos
+	yPos = float64(menu.Font.WindowHeight) - yPos
 	for i := range menu.Labels {
 		menu.Labels[i].IsClicked(xPos, yPos, button)
 	}
@@ -619,7 +618,7 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	if !menu.IsVisible {
 		return
 	}
-	yPos = float64(menu.WindowHeight) - yPos
+	yPos = float64(menu.Font.WindowHeight) - yPos
 	for i := range menu.Labels {
 		menu.Labels[i].IsReleased(xPos, yPos, button)
 	}
@@ -644,7 +643,7 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 		menu.Formatable[menu.NavigationIndex].NavigateTo()
 		return
 	}
-	yPos = float64(menu.WindowHeight) - yPos
+	yPos = float64(menu.Font.WindowHeight) - yPos
 	for i := range menu.Labels {
 		if menu.Labels[i].OnHover != nil {
 			menu.Labels[i].IsHovered(xPos, yPos)
@@ -656,8 +655,8 @@ func (menu *Menu) findCenter() (lowerLeft Point) {
 	menuWidthHalf := menu.Width / 2
 	menuHeightHalf := menu.Height / 2
 
-	lowerLeft.X = -menuWidthHalf  //+ menu.screenPositionOffset.X()
-	lowerLeft.Y = -menuHeightHalf //+ menu.screenPositionOffset.Y()
+	lowerLeft.X = -menuWidthHalf
+	lowerLeft.Y = -menuHeightHalf
 	return
 }
 

@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/4ydx/glmenu"
 	"github.com/4ydx/gltext"
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"golang.org/x/image/math/fixed"
-	"os"
-	"runtime"
 )
 
 var useStrictCoreProfile = (runtime.GOOS == "darwin")
@@ -138,6 +139,7 @@ func main() {
 		xPos, yPos := window.GetCursorPos()
 		menuManager.MouseHover(xPos, yPos)
 		if menuManager.Draw() {
+			menuManager.Menus["main"].Drag(1, 0)
 			// pause gameplay
 		} else {
 			// play game
