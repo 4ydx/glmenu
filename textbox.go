@@ -428,12 +428,8 @@ func (textbox *TextBox) InsidePoint() (P gltext.Point) {
 	x := (upperRight.X + lowerLeft.X) / 2
 	y := (upperRight.Y + lowerLeft.Y) / 2
 
-	// transform to screen coordinates
-	// - recall that (0,0) is the upper left hand corner of the screen
-	// - for the x axis we only need to shift everything to the right
-	// - for the y axis since positive points down we have to invert the existing value first
 	P.X = x + textbox.Menu.Font.WindowWidth/2
-	P.Y = -y + textbox.Menu.Font.WindowHeight/2
+	P.Y = y + textbox.Menu.Font.WindowHeight/2
 	return
 }
 
