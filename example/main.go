@@ -139,7 +139,7 @@ func main() {
 		xPos, yPos := window.GetCursorPos()
 		menuManager.MouseHover(xPos, yPos)
 		if menuManager.Draw() {
-			// menuManager.Menus["main"].Drag(1, 0)
+			menuManager.Menus["main"].Drag(1, 0)
 			// pause gameplay
 		} else {
 			// play game
