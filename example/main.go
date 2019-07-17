@@ -31,6 +31,10 @@ func keyCallback(
 	}
 }
 
+func mouseMoveCallback(w *glfw.Window, xPos, yPos float64) {
+	menuManager.MouseMove(xPos, yPos)
+}
+
 func mouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
@@ -85,6 +89,7 @@ func main() {
 	window.MakeContextCurrent()
 	window.SetKeyCallback(keyCallback)
 	window.SetMouseButtonCallback(mouseButtonCallback)
+	window.SetCursorPosCallback(mouseMoveCallback)
 
 	if err := gl.Init(); err != nil {
 		panic(err)

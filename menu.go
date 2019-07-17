@@ -112,6 +112,11 @@ type MenuDefaults struct {
 	TextScaleRate float32
 }
 
+type Drag struct {
+	On                   bool
+	PreviousX, PreviousY float64
+}
+
 // Menu is menu that can be rendered
 type Menu struct {
 	// parent MenuManager
@@ -127,6 +132,7 @@ type Menu struct {
 	// options
 	Defaults              MenuDefaults
 	IsVisible             bool
+	IsDragging            Drag
 	ShowOnKey             glfw.Key
 	Height                float32
 	Width                 float32
@@ -659,16 +665,30 @@ func (menu *Menu) MouseClick(xPos, yPos float64, button MouseClick) {
 	if inBox := InBox(mX, mY, menu); !inBox {
 		return
 	}
+	clicked := false
 	for i := range menu.Labels {
 		menu.Labels[i].IsClicked(xPos, yPos, button)
+		if menu.Labels[i].IsClick {
+			clicked = true
+		}
 	}
 	for i := range menu.TextBoxes {
 		menu.TextBoxes[i].IsClicked(xPos, yPos, button)
+		if menu.TextBoxes[i].IsClick {
+			clicked = true
+		}
+	}
+	if !clicked {
+		menu.IsDragging.On = true
+		menu.IsDragging.PreviousX = xPos
+		menu.IsDragging.PreviousY = yPos
 	}
 }
 
 // MouseRelease processed potential mouse release over the menu
 func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
+	menu.IsDragging.On = false
+
 	if !menu.IsVisible {
 		return
 	}
@@ -681,6 +701,14 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	}
 	for i := range menu.TextBoxes {
 		menu.TextBoxes[i].IsReleased(xPos, yPos, button)
+	}
+}
+
+func (menu *Menu) MouseMove(xPos, yPos float64) {
+	if menu.IsDragging.On {
+		menu.Drag(float32(xPos-menu.IsDragging.PreviousX), float32(yPos-menu.IsDragging.PreviousY))
+		menu.IsDragging.PreviousX = xPos
+		menu.IsDragging.PreviousY = yPos
 	}
 }
 

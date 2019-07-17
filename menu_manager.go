@@ -92,6 +92,17 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	}
 }
 
+func (mm *MenuManager) MouseMove(xPos, yPos float64) {
+	yPos = float64(mm.Font.WindowHeight) - yPos
+
+	for _, menu := range mm.Menus {
+		if menu.IsVisible {
+			menu.MouseMove(xPos, yPos)
+			return
+		}
+	}
+}
+
 // KeyRelease handles key release events
 func (mm *MenuManager) KeyRelease(key glfw.Key, withShift bool) {
 	for _, menu := range mm.Menus {
