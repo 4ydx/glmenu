@@ -6,7 +6,7 @@ import (
 	"github.com/4ydx/gltext"
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"golang.org/x/image/math/fixed"
 	"os"
 	"runtime"
@@ -52,9 +52,8 @@ func main() {
 	var err error
 
 	runtime.LockOSThread()
-	err = glfw.Init()
-	if err != nil {
-		panic("glfw error")
+	if err := glfw.Init(); err != nil {
+		panic(err)
 	}
 	defer glfw.Terminate()
 
@@ -68,19 +67,20 @@ func main() {
 	glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
 
 	// fullscreen
-	//primary := glfw.GetPrimaryMonitor()
-	//vm := primary.GetVideoMode()
-	//w, h := vm.Width, vm.Height // you should probably pick one in another manner
-	//window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
+	primary := glfw.GetPrimaryMonitor()
+	vm := primary.GetVideoMode()
+	w, h := vm.Width, vm.Height // you should probably pick one in another manner
+	window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
 	// fullscreen
 
 	// windowed
-	window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
+	// window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
 	// windowed
 
 	if err != nil {
 		panic(err)
 	}
+
 	window.MakeContextCurrent()
 	window.SetKeyCallback(keyCallback)
 	window.SetMouseButtonCallback(mouseButtonCallback)
