@@ -11,6 +11,7 @@ import (
 // MenuManager handles ineraction between related menus (navigation)
 // as well as performing other conveniences
 type MenuManager struct {
+	Window      *glfw.Window
 	Font        *v41.Font
 	StartKey    glfw.Key // they key that, when pressed, will display the StartMenu
 	StartMenu   string   // the name passed to each NewMenu call
@@ -33,6 +34,9 @@ func (mm *MenuManager) Finalize(align Alignment) error {
 					func(from *Menu, to *Menu, l *Label) {
 						l.onRelease = func(xPos, yPos float64, button MouseClick, inBox bool) {
 							if inBox {
+								if ArrowCursor != nil {
+									mm.Window.SetCursor(ArrowCursor)
+								}
 								from.Hide()
 								to.Show()
 							}
@@ -50,6 +54,16 @@ func (mm *MenuManager) Finalize(align Alignment) error {
 func (mm *MenuManager) IsVisible() bool {
 	for _, menu := range mm.Menus {
 		if menu.IsVisible {
+			return true
+		}
+	}
+	return false
+}
+
+// IsHovered returns true when one of the menus is being hovered over
+func (mm *MenuManager) IsHovered() bool {
+	for _, menu := range mm.Menus {
+		if menu.IsHovered() {
 			return true
 		}
 	}
@@ -92,6 +106,7 @@ func (mm *MenuManager) MouseHover(xPos, yPos float64) {
 	}
 }
 
+// MouseMove handles menu dragging during mouse movement
 func (mm *MenuManager) MouseMove(xPos, yPos float64) {
 	yPos = float64(mm.Font.WindowHeight) - yPos
 
@@ -193,8 +208,8 @@ func (mm *MenuManager) SetText(name string, index int, text string) error {
 }
 
 // NewMenuManager handles a tree of menus that interact with one another
-func NewMenuManager(font *v41.Font, startKey glfw.Key, startMenu string) *MenuManager {
-	mm := &MenuManager{Font: font, StartKey: startKey, StartMenu: startMenu}
+func NewMenuManager(window *glfw.Window, font *v41.Font, startKey glfw.Key, startMenu string) *MenuManager {
+	mm := &MenuManager{Window: window, Font: font, StartKey: startKey, StartMenu: startMenu}
 	mm.Menus = make(map[string]*Menu)
 	return mm
 }

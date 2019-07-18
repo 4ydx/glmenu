@@ -33,6 +33,11 @@ func keyCallback(
 
 func mouseMoveCallback(w *glfw.Window, xPos, yPos float64) {
 	menuManager.MouseMove(xPos, yPos)
+	if menuManager.IsHovered() {
+		w.SetCursor(glmenu.HandCursor)
+	} else {
+		w.SetCursor(glmenu.ArrowCursor)
+	}
 }
 
 func mouseButtonCallback(
@@ -85,7 +90,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	glmenu.CursorInit()
 	window.MakeContextCurrent()
 	window.SetKeyCallback(keyCallback)
 	window.SetMouseButtonCallback(mouseButtonCallback)
@@ -111,7 +116,9 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		defer fd.Close()
+		defer func() {
+			_ = fd.Close()
+		}()
 
 		runesPerRow := fixed.Int26_6(16)
 		runeRanges := make(gltext.RuneRanges, 0)
@@ -135,7 +142,9 @@ func main() {
 
 	// load menus
 	MenuInit(window, font)
-	menuManager.Show("main")
+	if err := menuManager.Show("main"); err != nil {
+		panic(err)
+	}
 
 	gl.ClearColor(0, 0, 0, 0.0)
 	for !window.ShouldClose() {
@@ -153,4 +162,5 @@ func main() {
 		glfw.PollEvents()
 	}
 	menuManager.Release()
+	glmenu.CursorDestroy()
 }

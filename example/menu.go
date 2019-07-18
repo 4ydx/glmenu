@@ -1,16 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"github.com/4ydx/glmenu"
 	"github.com/4ydx/gltext/v4.1"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-	"os"
 )
 
+// MenuInit starts menus
 func MenuInit(window *glfw.Window, font *v41.Font) {
-	menuManager = glmenu.NewMenuManager(font, glfw.KeyM, "main")
+	menuManager = glmenu.NewMenuManager(window, font, glfw.KeyM, "main")
 
 	defaults := glmenu.MenuDefaults{
 		TextColor:       mgl32.Vec3{1, 1, 1},
@@ -28,8 +27,7 @@ func MenuInit(window *glfw.Window, font *v41.Font) {
 	// menu 1
 	mainMenu, err := menuManager.NewMenu(window, "main", defaults, glmenu.ScreenLeft)
 	if err != nil {
-		fmt.Println("error loading the font")
-		os.Exit(1)
+		panic(err)
 	}
 	textbox, err := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
 	if err != nil {
@@ -49,11 +47,12 @@ func MenuInit(window *glfw.Window, font *v41.Font) {
 	}
 	optionMenu, err := menuManager.NewMenu(window, "option", defaults, glmenu.ScreenTopCenter)
 	if err != nil {
-		fmt.Println("error loading font")
-		os.Exit(1)
+		panic(err)
 	}
 	optionMenu.NewLabel("Back", glmenu.LabelConfig{Action: glmenu.GotoMenu, Goto: "main"})
 
 	// complete setup
-	menuManager.Finalize(glmenu.AlignRight)
+	if err := menuManager.Finalize(glmenu.AlignRight); err != nil {
+		panic(err)
+	}
 }

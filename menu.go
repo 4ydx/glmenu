@@ -112,6 +112,7 @@ type MenuDefaults struct {
 	TextScaleRate float32
 }
 
+// Drag trags dragging
 type Drag struct {
 	On                   bool
 	PreviousX, PreviousY float64
@@ -722,6 +723,7 @@ func (menu *Menu) MouseRelease(xPos, yPos float64, button MouseClick) {
 	}
 }
 
+// MouseMove handles menu dragging during mouse movement
 func (menu *Menu) MouseMove(xPos, yPos float64) {
 	if menu.IsDragging.On {
 		menu.Drag(float32(xPos-menu.IsDragging.PreviousX), float32(yPos-menu.IsDragging.PreviousY))
@@ -757,6 +759,16 @@ func (menu *Menu) MouseHover(xPos, yPos float64) {
 			menu.Labels[i].IsHovered(xPos, yPos)
 		}
 	}
+}
+
+// IsHovered indicates if a label is being hovered
+func (menu *Menu) IsHovered() bool {
+	for i := range menu.Labels {
+		if menu.Labels[i].IsHover {
+			return true
+		}
+	}
+	return false
 }
 
 // KeyRelease processes a key release
