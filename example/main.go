@@ -117,8 +117,8 @@ func main() {
 		runeRanges := make(gltext.RuneRanges, 0)
 		runeRanges = append(runeRanges, gltext.RuneRange{Low: 1, High: 128})
 
-		scale := fixed.Int26_6(25)
-
+		//scale := fixed.Int26_6(25)
+		scale := fixed.Int26_6(12)
 		config, err = gltext.NewTruetypeFontConfig(fd, scale, runeRanges, runesPerRow, 5)
 		if err != nil {
 			panic(err)
