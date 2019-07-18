@@ -176,12 +176,30 @@ type Menu struct {
 
 // Drag the menu
 func (menu *Menu) Drag(x, y float32) {
-	menu.screenPositionOffset[0] += x
-	menu.screenPositionOffset[1] += y
+	// validate position inside current screen
+	offX := menu.screenPositionOffset[0] + x
+	offY := menu.screenPositionOffset[1] + y
 
-	menu.finalPosition[0] = menu.screenPositionOffset.X() / (menu.Font.WindowWidth / 2)
-	menu.finalPosition[1] = menu.screenPositionOffset.Y() / (menu.Font.WindowHeight / 2)
-
+	winMaxX := menu.Font.WindowWidth / 2
+	if menu.upperRight.X+offX >= winMaxX {
+		return
+	}
+	winMaxY := menu.Font.WindowHeight / 2
+	if menu.upperRight.Y+offY >= winMaxY {
+		return
+	}
+	winMinX := -winMaxX
+	if menu.lowerLeft.X+offX <= winMinX {
+		return
+	}
+	winMinY := -winMaxY
+	if menu.lowerLeft.Y+offY <= winMinY {
+		return
+	}
+	menu.screenPositionOffset[0] = offX
+	menu.screenPositionOffset[1] = offY
+	menu.finalPosition[0] = offX / (menu.Font.WindowWidth / 2)
+	menu.finalPosition[1] = offY / (menu.Font.WindowHeight / 2)
 	for _, l := range menu.Formatable {
 		l.DragPosition(x, y)
 	}
