@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/4ydx/glfw/v3.3/glfw"
 	"github.com/4ydx/glmenu"
 	"github.com/4ydx/gltext/v4.1"
-	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
