@@ -74,7 +74,6 @@ type TextBox struct {
 	centeredPosition uint32
 
 	backgroundUniform         int32
-	borderBackground          mgl32.Vec3
 	textBackground            mgl32.Vec3
 	finalPositionUniform      int32
 	finalPosition             mgl32.Vec2
@@ -84,9 +83,8 @@ type TextBox struct {
 	LowerLeft  gltext.Point
 	UpperRight gltext.Point
 
-	BorderWidth int32
-	height      float32
-	width       float32
+	height float32
+	width  float32
 
 	Position mgl32.Vec2
 }
@@ -112,7 +110,7 @@ func (textbox *TextBox) GetPadding() Padding {
 }
 
 // Load the textbox
-func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int32) error {
+func (textbox *TextBox) Load(menu *Menu, width, height float32) error {
 	textbox.Menu = menu
 
 	// text
@@ -122,14 +120,12 @@ func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int3
 	textbox.Cursor.SetString("|")
 
 	// border formatting
-	textbox.BorderWidth = borderWidth
 	textbox.height = height
 	textbox.width = width
 	textbox.LowerLeft.X = -float32(width) / 2.0
 	textbox.LowerLeft.Y = -float32(height) / 2.0
 	textbox.UpperRight.X = float32(width) / 2.0
 	textbox.UpperRight.Y = float32(height) / 2.0
-	textbox.borderBackground = mgl32.Vec3{1.0, 1.0, 1.0}
 	textbox.textBackground = mgl32.Vec3{0.0, 0.0, 0.0}
 
 	// create shader program and define attributes and uniforms
@@ -197,65 +193,88 @@ func (textbox *TextBox) Load(menu *Menu, width, height float32, borderWidth int3
 func (textbox *TextBox) makeBufferData() {
 	// this all works because the original positioning is centered around the origin
 
-	// left border edge
 	// vbo data (ebo data value)
 	// 0,1 (0) -> first  point of the quad which is drawn CCW
 	// 2,3 (1) -> second point
 	// 4,5 (2) -> third  point
 	// 6,7 (3) -> fourth point
 	// one triangle is drawn using 0,1,2 and the next using 0,2,3 - this pattern applies to all edges (left, right, top, bottom)
+	xWidth := textbox.Menu.Defaults.Border.Width.X()
+	yWidth := textbox.Menu.Defaults.Border.Width.Y()
+
+	// left border edge
 	textbox.vboData[0] = textbox.LowerLeft.X
-	textbox.vboData[1] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
-	textbox.vboData[2] = textbox.LowerLeft.X - float32(textbox.BorderWidth)
-	textbox.vboData[3] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
-	textbox.vboData[4] = textbox.LowerLeft.X - float32(textbox.BorderWidth)
-	textbox.vboData[5] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
+	textbox.vboData[1] = textbox.UpperRight.Y + yWidth
+
+	textbox.vboData[2] = textbox.LowerLeft.X - yWidth
+	textbox.vboData[3] = textbox.UpperRight.Y + yWidth
+
+	textbox.vboData[4] = textbox.LowerLeft.X - yWidth
+	textbox.vboData[5] = textbox.LowerLeft.Y - yWidth
+
 	textbox.vboData[6] = textbox.LowerLeft.X
-	textbox.vboData[7] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
+	textbox.vboData[7] = textbox.LowerLeft.Y - yWidth
+
 	textbox.eboData[0], textbox.eboData[1], textbox.eboData[2], textbox.eboData[3], textbox.eboData[4], textbox.eboData[5] = 0, 1, 2, 0, 2, 3
 
 	// top border edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[8] = textbox.UpperRight.X
-	textbox.vboData[9] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
+	textbox.vboData[9] = textbox.UpperRight.Y + xWidth
+
 	textbox.vboData[10] = textbox.LowerLeft.X
-	textbox.vboData[11] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
+	textbox.vboData[11] = textbox.UpperRight.Y + xWidth
+
 	textbox.vboData[12] = textbox.LowerLeft.X
 	textbox.vboData[13] = textbox.UpperRight.Y
+
 	textbox.vboData[14] = textbox.UpperRight.X
 	textbox.vboData[15] = textbox.UpperRight.Y
+
 	textbox.eboData[6], textbox.eboData[7], textbox.eboData[8], textbox.eboData[9], textbox.eboData[10], textbox.eboData[11] = 4, 5, 6, 4, 6, 7
 
 	// bottom border edge - intentionally leaves out the borderwidth on the x-axis
 	textbox.vboData[16] = textbox.UpperRight.X
 	textbox.vboData[17] = textbox.LowerLeft.Y
+
 	textbox.vboData[18] = textbox.LowerLeft.X
 	textbox.vboData[19] = textbox.LowerLeft.Y
+
 	textbox.vboData[20] = textbox.LowerLeft.X
-	textbox.vboData[21] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
+	textbox.vboData[21] = textbox.LowerLeft.Y - xWidth
+
 	textbox.vboData[22] = textbox.UpperRight.X
-	textbox.vboData[23] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
+	textbox.vboData[23] = textbox.LowerLeft.Y - xWidth
+
 	textbox.eboData[12], textbox.eboData[13], textbox.eboData[14], textbox.eboData[15], textbox.eboData[16], textbox.eboData[17] = 8, 9, 10, 8, 10, 11
 
 	// right border edge
-	textbox.vboData[24] = textbox.UpperRight.X + float32(textbox.BorderWidth)
-	textbox.vboData[25] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
+	textbox.vboData[24] = textbox.UpperRight.X + yWidth
+	textbox.vboData[25] = textbox.UpperRight.Y + yWidth
+
 	textbox.vboData[26] = textbox.UpperRight.X
-	textbox.vboData[27] = textbox.UpperRight.Y + float32(textbox.BorderWidth)
+	textbox.vboData[27] = textbox.UpperRight.Y + yWidth
+
 	textbox.vboData[28] = textbox.UpperRight.X
-	textbox.vboData[29] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
-	textbox.vboData[30] = textbox.UpperRight.X + float32(textbox.BorderWidth)
-	textbox.vboData[31] = textbox.LowerLeft.Y - float32(textbox.BorderWidth)
+	textbox.vboData[29] = textbox.LowerLeft.Y - yWidth
+
+	textbox.vboData[30] = textbox.UpperRight.X + yWidth
+	textbox.vboData[31] = textbox.LowerLeft.Y - yWidth
+
 	textbox.eboData[18], textbox.eboData[19], textbox.eboData[20], textbox.eboData[21], textbox.eboData[22], textbox.eboData[23] = 12, 13, 14, 12, 14, 15
 
 	// background
 	textbox.vboData[32] = textbox.UpperRight.X
 	textbox.vboData[33] = textbox.UpperRight.Y
+
 	textbox.vboData[34] = textbox.LowerLeft.X
 	textbox.vboData[35] = textbox.UpperRight.Y
+
 	textbox.vboData[36] = textbox.LowerLeft.X
 	textbox.vboData[37] = textbox.LowerLeft.Y
+
 	textbox.vboData[38] = textbox.UpperRight.X
 	textbox.vboData[39] = textbox.LowerLeft.Y
+
 	textbox.eboData[24], textbox.eboData[25], textbox.eboData[26], textbox.eboData[27], textbox.eboData[28], textbox.eboData[29] = 16, 17, 18, 16, 18, 19
 }
 
@@ -294,7 +313,7 @@ func (textbox *TextBox) Draw() {
 	gl.UniformMatrix4fv(textbox.orthographicMatrixUniform, 1, false, &textbox.Menu.Font.OrthographicMatrix[0])
 
 	// draw border - 4 * 6: four quads with six indices apiece starting at the beginning of the vbo (0)
-	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.borderBackground[0])
+	gl.Uniform3fv(textbox.backgroundUniform, 1, &textbox.Menu.Defaults.Border.Color[0])
 	gl.DrawElementsBaseVertex(gl.TRIANGLES, int32(4*6), gl.UNSIGNED_INT, nil, int32(0))
 
 	// draw background - start drawing after skipping the border vertices (16)

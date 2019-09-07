@@ -96,17 +96,21 @@ const (
 	ScreenPadding = float32(10) // used by screen positioning calculations
 )
 
+type MenuBorder struct {
+	Width mgl32.Vec2
+	Color mgl32.Vec4
+}
+
 // MenuDefaults are menu defaults
 type MenuDefaults struct {
 	TextColor       mgl32.Vec3
 	TextHover       mgl32.Vec3
 	TextClick       mgl32.Vec3
 	BackgroundColor mgl32.Vec4
-	BorderColor     mgl32.Vec4
-	Border          mgl32.Vec2
 	Dimensions      mgl32.Vec2
 	Padding         mgl32.Vec2
 	HoverPadding    mgl32.Vec2
+	Border          MenuBorder
 
 	// increment during a scale operation
 	TextScaleRate float32
@@ -230,8 +234,8 @@ func (menu *Menu) Finalize(align Alignment) {
 
 	// create a 5 pixel border
 	menu.scaleMatrix = mgl32.Scale3D(
-		1+menu.Defaults.Border.X()/(menu.Width/2),
-		1+menu.Defaults.Border.Y()/(menu.Height/2),
+		1+menu.Defaults.Border.Width.X()/(menu.Width/2),
+		1+menu.Defaults.Border.Width.Y()/(menu.Height/2),
 		1,
 	)
 
@@ -461,9 +465,9 @@ func (menu *Menu) format(align Alignment) {
 }
 
 // NewTextBox handles vertical spacing
-func (menu *Menu) NewTextBox(str string, width, height float32, borderWidth int32) (*TextBox, error) {
+func (menu *Menu) NewTextBox(str string, width, height float32) (*TextBox, error) {
 	textbox := &TextBox{}
-	err := textbox.Load(menu, width, height, borderWidth)
+	err := textbox.Load(menu, width, height)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -643,7 +647,7 @@ func (menu *Menu) Draw() bool {
 		// i == 0 is background draw at higher scale, producing a border around the menu
 		if i == 0 {
 			gl.UniformMatrix4fv(menu.scaleUniform, 1, false, &menu.scaleMatrix[0])
-			gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Defaults.BorderColor[0])
+			gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Defaults.Border.Color[0])
 		} else {
 			gl.UniformMatrix4fv(menu.scaleUniform, 1, false, &menu.scaleIdent4[0])
 			gl.Uniform4fv(menu.backgroundUniform, 1, &menu.Defaults.BackgroundColor[0])

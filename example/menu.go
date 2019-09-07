@@ -11,17 +11,20 @@ import (
 func MenuInit(window *glfw.Window, font *v41.Font) {
 	menuManager = glmenu.NewMenuManager(window, font, glfw.KeyM, "main")
 
+	border := glmenu.MenuBorder{
+		Width: mgl32.Vec2{1, 1},
+		Color: mgl32.Vec4{0.5, 0.5, 0.5, 1.0},
+	}
 	defaults := glmenu.MenuDefaults{
 		TextColor:       mgl32.Vec3{1, 1, 1},
 		TextClick:       mgl32.Vec3{250.0 / 255.0, 0, 154.0 / 255.0},
-		TextHover:       mgl32.Vec3{0, 250.0 / 255.0, 154.0 / 255.0},
-		BackgroundColor: mgl32.Vec4{0.5, 0.5, 0.5, 1.0},
-		BorderColor:     mgl32.Vec4{1, 1, 1, 1.0},
-		Border:          mgl32.Vec2{2, 2},
+		TextHover:       mgl32.Vec3{0.6, 0.6, 0.6},
+		BackgroundColor: mgl32.Vec4{0.2, 0.2, 0.2, 1.0},
 		Dimensions:      mgl32.Vec2{0, 0},
 		Padding:         mgl32.Vec2{10, 10},
 		HoverPadding:    mgl32.Vec2{10, 10},
-		TextScaleRate:   0.05,
+		Border:          border,
+		TextScaleRate:   0.00,
 	}
 
 	// menu 1
@@ -29,7 +32,7 @@ func MenuInit(window *glfw.Window, font *v41.Font) {
 	if err != nil {
 		panic(err)
 	}
-	textbox, err := mainMenu.NewTextBox("127.0.0.1", 250, 40, 1)
+	textbox, err := mainMenu.NewTextBox("127.0.0.1", 250, 40)
 	if err != nil {
 		panic(err)
 	}

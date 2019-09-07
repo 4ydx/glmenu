@@ -77,14 +77,14 @@ func main() {
 	glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
 
 	// fullscreen
-	//primary := glfw.GetPrimaryMonitor()
-	//vm := primary.GetVideoMode()
-	//w, h := vm.Width, vm.Height // you should probably pick one in another manner
-	//window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
+	primary := glfw.GetPrimaryMonitor()
+	vm := primary.GetVideoMode()
+	w, h := vm.Width, vm.Height // you should probably pick one in another manner
+	window, err = glfw.CreateWindow(w, h, "Testing", primary, nil)
 	// fullscreen
 
 	// windowed
-	window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
+	// window, err = glfw.CreateWindow(640, 480, "Testing", nil, nil)
 	// windowed
 
 	if err != nil {
@@ -103,7 +103,7 @@ func main() {
 	fmt.Println("Opengl version", version)
 
 	var font *v41.Font
-	config, err := gltext.LoadTruetypeFontConfig("fontconfigs", "luximr")
+	config, err := gltext.LoadTruetypeFontConfig("fontconfigs", "orange")
 
 	if err == nil {
 		font, err = v41.NewFont(config)
@@ -112,7 +112,7 @@ func main() {
 		}
 		fmt.Println("Font loaded from disk...")
 	} else {
-		fd, err := os.Open("font/luximr.ttf")
+		fd, err := os.Open("font/orange kid.ttf")
 		if err != nil {
 			panic(err)
 		}
@@ -125,7 +125,7 @@ func main() {
 		runeRanges = append(runeRanges, gltext.RuneRange{Low: 1, High: 128})
 
 		//scale := fixed.Int26_6(25)
-		scale := fixed.Int26_6(12)
+		scale := fixed.Int26_6(18)
 		config, err = gltext.NewTruetypeFontConfig(fd, scale, runeRanges, runesPerRow, 5)
 		if err != nil {
 			panic(err)
