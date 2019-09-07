@@ -493,7 +493,7 @@ func (textbox *TextBox) clicked(index int, xPos, yPos float64, button MouseClick
 // IsClicked handles click events
 func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 	mX, mY := ScreenCoordToCenteredCoord(textbox.Menu.Font.WindowWidth, textbox.Menu.Font.WindowHeight, xPos, yPos)
-	inBox := InBox(mX, mY, textbox.Text)
+	inBox := InBox(mX, mY, textbox)
 	if inBox {
 		index, side := textbox.Text.ClickedCharacter(xPos, float64(textbox.Menu.screenPositionOffset[0]))
 		if side == v41.CSRight {
@@ -512,7 +512,7 @@ func (textbox *TextBox) IsClicked(xPos, yPos float64, button MouseClick) {
 // IsReleased handles click release events
 func (textbox *TextBox) IsReleased(xPos, yPos float64, button MouseClick) {
 	mX, mY := ScreenCoordToCenteredCoord(textbox.Menu.Font.WindowWidth, textbox.Menu.Font.WindowHeight, xPos, yPos)
-	inBox := InBox(mX, mY, textbox.Text)
+	inBox := InBox(mX, mY, textbox)
 
 	// anything flagged as clicked now needs to decide whether to execute its logic based on inBox
 	if textbox.IsClick {
