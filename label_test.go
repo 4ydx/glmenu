@@ -9,6 +9,8 @@ import (
 )
 
 // Test that inside point returns the expected screen coordinate point at the center of the object
+//
+// (0,0) is the upper left hand corner of the screen and (+xMax, +yMax) is the lower right hand corner
 func TestInsidePoint(t *testing.T) {
 	// around center of screen
 	f := &v41.Font{
@@ -31,19 +33,9 @@ func TestInsidePoint(t *testing.T) {
 	}
 
 	// moved up the y axis by 6 units
+	// in terms of screen coordinate layout this moves down the screen
 	l.Text = &v41.Text{
 		Position:   mgl32.Vec2{0, 6},
-		LowerLeft:  gltext.Point{X: -3, Y: -2},
-		UpperRight: gltext.Point{X: +3, Y: +2},
-	}
-	p = l.InsidePoint()
-	if p.X != 15 || p.Y != 4 {
-		t.Fatalf("bad point %+v", p)
-	}
-
-	// moved down the y axis by 6 units
-	l.Text = &v41.Text{
-		Position:   mgl32.Vec2{0, -6},
 		LowerLeft:  gltext.Point{X: -3, Y: -2},
 		UpperRight: gltext.Point{X: +3, Y: +2},
 	}
@@ -52,7 +44,20 @@ func TestInsidePoint(t *testing.T) {
 		t.Fatalf("bad point %+v", p)
 	}
 
+	// moved down the y axis by 6 units
+	// in terms of screen coordinate layout this moves up the screen
+	l.Text = &v41.Text{
+		Position:   mgl32.Vec2{0, -6},
+		LowerLeft:  gltext.Point{X: -3, Y: -2},
+		UpperRight: gltext.Point{X: +3, Y: +2},
+	}
+	p = l.InsidePoint()
+	if p.X != 15 || p.Y != 4 {
+		t.Fatalf("bad point %+v", p)
+	}
+
 	// moved up the x axis by 6 units
+	// in terms of screen coordinate layout this moves to the right of the screen
 	l.Text = &v41.Text{
 		Position:   mgl32.Vec2{6, 0},
 		LowerLeft:  gltext.Point{X: -3, Y: -2},
@@ -64,6 +69,7 @@ func TestInsidePoint(t *testing.T) {
 	}
 
 	// moved down the x axis by 6 units
+	// in terms of screen coordinate layout this moves to the left of the screen
 	l.Text = &v41.Text{
 		Position:   mgl32.Vec2{-6, 0},
 		LowerLeft:  gltext.Point{X: -3, Y: -2},
