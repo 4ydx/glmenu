@@ -32,7 +32,6 @@ func keyCallback(
 }
 
 func mouseMoveCallback(w *glfw.Window, xPos, yPos float64) {
-	fmt.Println("x", xPos, "y", yPos)
 	menuManager.MouseMove(xPos, yPos)
 	if menuManager.IsHovered() {
 		w.SetCursor(glmenu.HandCursor)
