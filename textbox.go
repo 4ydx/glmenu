@@ -369,12 +369,13 @@ func (textbox *TextBox) Edit(key glfw.Key, withShift bool) {
 				index++
 				textbox.CursorIndex = index
 				textbox.Text.SetString(string(r))
-				textbox.Text.SetPosition(textbox.Text.Position)
+
 				textbox.Cursor.SetPosition(
 					mgl32.Vec2{
 						textbox.Text.Position.X() + float32(textbox.Text.CharPosition(index)),
 						textbox.Text.Position.Y(),
-					})
+					},
+				)
 			}
 		}
 	}
@@ -388,7 +389,6 @@ func (textbox *TextBox) SetPosition(v mgl32.Vec2) {
 	textbox.finalPosition[0] = v.X() / (textbox.Menu.Font.WindowWidth / 2)
 	textbox.finalPosition[1] = v.Y() / (textbox.Menu.Font.WindowHeight / 2)
 
-	// used to build shadow data and for calling SetPosition again when needed
 	textbox.Text.SetPosition(v)
 	textbox.Cursor.SetPosition(v)
 }
@@ -420,7 +420,7 @@ func (textbox *TextBox) GetBoundingBox() (lowerLeft, upperRight gltext.Point) {
 // Backspace handling
 func (textbox *TextBox) Backspace() {
 	index := textbox.CursorIndex
-	if len(textbox.Text.String) > 0 {
+	if index > 0 && len(textbox.Text.String) > 0 {
 		r := make([]rune, len(textbox.Text.String)-1)
 		copy(r, []rune(textbox.Text.String[0:index-1]))
 		copy(r[index-1:], []rune(textbox.Text.String[index:]))
